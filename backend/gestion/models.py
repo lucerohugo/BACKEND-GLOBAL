@@ -13,7 +13,7 @@ class General(models.Model):
     gen_tele = models.CharField(max_length=20, blank=True, help_text="Telefono")
    
 
-#----------------------------------------------------------CLEINTES↓--------------------------------------------------------------------------
+#----------------------------------------------------------CLIENTES↓--------------------------------------------------------------------------
 
 class Zona(models.Model):
     zon_codi = models.IntegerField(primary_key=True, editable=True)
@@ -48,7 +48,7 @@ class LegajoPersonal(models.Model):
     Per_Celu = models.CharField(max_length=20, blank=True, help_text="Celular", null=True,)
     Per_mail = models.CharField(max_length=100, blank=True, help_text="Email", null=True)
     Per_domi = models.CharField(max_length=100, blank=True, help_text="Dirección", null=True)
-    loc_codi = models.ForeignKey(Localidad, on_delete=models.PROTECT, related_name="Localidad")
+    Per_loca = models.CharField(max_length=100, blank=True, help_text="Localidad Personal", null=True) #no es FK de localidad
 
 
 
@@ -90,6 +90,11 @@ class SubRubro(models.Model):
     sru_nomb = models.CharField(max_length=100, blank=True, help_text="Subrubro nombre", null=True)
     rub_codi = models.ForeignKey(Rubro, on_delete=models.PROTECT, related_name="Rubro")
 
+#nuevo agregado sin relacion
+class SubMarca(models.Model):
+    smar_codi = models.IntegerField(primary_key=True, editable=True)
+    smar_nomb = models.CharField(max_length=100, blank=True, help_text="Sub marca", null=True)
+
 
 class Marca(models.Model):
     mar_codi = models.IntegerField(primary_key=True, editable=True)
@@ -130,6 +135,7 @@ class Articulos(models.Model):
     pro_codi = models.ForeignKey(Proveedor, on_delete=models.PROTECT, related_name="Proveedor")
     sru_codi = models.ForeignKey(SubRubro, on_delete=models.PROTECT, related_name="Subrubro")
     mar_codi = models.ForeignKey(Marca, on_delete=models.PROTECT, related_name="Marca")
+    smar_codi = models.ForeignKey(SubMarca, on_delete=models.PROTECT, related_name="Submarca")
 
 
 
@@ -143,34 +149,54 @@ class Sucursal(models.Model):
     suc_codi = models.IntegerField(primary_key=True, editable=True)
     suc_nomb = models.CharField(max_length=100, blank=True, help_text="Nombre sucursal")
 
+class CondicionVenta(models.Model):
+    vta_cvta = models.CharField(primary_key=True, editable=True, max_length=3, null=True) #3 ELTRAS PRIMARY KEY 
+
+class ComodinVenta(models.Model):
+    vta_ccom = models.IntegerField(primary_key=True, editable=True)
+    vta_ncom = models.CharField(max_length=100, blank=True, help_text="Nombre comodin", null=True)
 
 class Ventas(models.Model):
-    vta_codi = models.IntegerField(primary_key=True, editable=True) 
+    vta_codi = models.AutoFieldField(primary_key=True, editable=True)
     vta_fech = models.DateField(blank=True, null=True, help_text="Fecha venta")
-    vta_cvta = models.CharField(max_length=100, blank=True, help_text="Condicion de venta", null=True)
-    # vta_TVta = models.CharField(max_length=100, blank=True, help_text="Tipo de venta", null=True)
     vta_itoR = models.CharField(max_length=100, blank=True, help_text="Total real", null=True)
     vta_igra = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe gravado", null=True)
     vta_iexe = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe exento", null=True)
     vta_iiva = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe IVA", null=True)
     vta_iiin = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe de impuesto interno", null=True)
     vta_ibts = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Total ingreso brutos", null=True)
-    vta_boni = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Bonificacion", null=True) 
     #relaciones
-    cli_codi = models.ForeignKey(Clientes,on_delete=models.PROTECT, related_name="Clientes")
-    suc_codi = models.ForeignKey(Sucursal, on_delete=models.PROTECT, related_name="Sucursal")
+    cli_codi = models.ForeignKey(Clientes,on_delete=models.PROTECT, related_name="ventas")              
+    vta_cvta = models.ForeignKey(CondicionVenta, on_delete=models.PROTECT, related_name="Condicion venta") 
+    suc_codi = models.ForeignKey(Sucursal, on_delete=models.PROTECT, related_name="Sucursal")               
+    vta_ccom = models.ForeignKey(ComodinVenta, on_delete=models.PROTECT, related_name="Comodin venta")
     gen_codi = models.ForeignKey(General, on_delete=models.PROTECT, related_name="General")
-    per_codi = models.ForeignKey(LegajoPersonal, on_delete=models.PROTECT, related_name="Legajo Personal")
-    com_codi = models.ForeignKey(Comprobante, on_delete=models.PROTECT, related_name="Comprobante")
+   
+
+
+    #hacer restriccion sino
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=[
+                    "cli_codi",
+                    "vta_fech",
+                    "vta_cvta",                    
+                    "suc_codi",
+                    "vta_ccom",
+                    "gen_codi"
+                ],
+                name="uk_venta"
+            )
+        ]
 
     
 
 class DetalleVenta(models.Model):
-    dvt_codi = models.IntegerField(primary_key=True, editable=True)
-    vta_codi = models.ForeignKey(Ventas, on_delete=models.PROTECT, related_name="Ventas")
-    art_codi = models.ForeignKey(Articulos, on_delete=models.PROTECT, related_name="Articulos")
+    dvt_codi = models.BigAutoField(primary_key=True, editable=True)
+    vta_codi = models.ForeignKey(Ventas, on_delete=models.PROTECT, related_name="detalles")
+    art_codi = models.ForeignKey(Articulos, on_delete=models.PROTECT, related_name="detalles")
     dvt_iOri = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Importe original sin bonificacion", null=True)
-    dvt_boni = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Porcentaje bonificacion articulo", null=True) #que sea porcentaje 
     dvt_iuni = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Precio unitario", null=True)
     dvt_itot = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Total", null=True)
     dvt_cost = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Costo", null=True)
@@ -180,6 +206,15 @@ class DetalleVenta(models.Model):
     dvt_iint = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Impuesto interno unitario", null=True)
     dvt_caPi = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Cantidad de piezas en pesables", null=True)
     dvt_cant = models.DecimalField(max_digits=30, decimal_places=6,  help_text="Cantidad", null=True)
+
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["vta_codi", "art_codi"],
+                name="uk_detalle_venta"
+            )
+        ]
 
 
 
