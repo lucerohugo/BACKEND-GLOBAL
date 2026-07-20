@@ -157,7 +157,7 @@ class ComodinVenta(models.Model):
     vta_ncom = models.CharField(max_length=100, blank=True, help_text="Nombre comodin", null=True)
 
 class Ventas(models.Model):
-    vta_codi = models.AutoFieldField(primary_key=True, editable=True)
+    vta_codi = models.AutoField(primary_key=True, editable=True)
     vta_fech = models.DateField(blank=True, null=True, help_text="Fecha venta")
     vta_itoR = models.CharField(max_length=100, blank=True, help_text="Total real", null=True)
     vta_igra = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe gravado", null=True)
