@@ -11,6 +11,8 @@ class General(models.Model):
     gen_cuit = models.CharField(max_length=20, default='00-00000000-0', help_text="CUIT de la empresa")
     gen_dire = models.CharField(max_length=150, blank=True, help_text="Direccion")
     gen_tele = models.CharField(max_length=20, blank=True, help_text="Telefono")
+
+
    
 
 #----------------------------------------------------------CLIENTES↓--------------------------------------------------------------------------
@@ -51,10 +53,17 @@ class LegajoPersonal(models.Model):
     Per_loca = models.CharField(max_length=100, blank=True, help_text="Localidad Personal", null=True) #no es FK de localidad
 
 
-
 class GrupoCliente(models.Model):
     grc_codi = models.IntegerField(primary_key=True, editable=True)
     grc_nomb = models.CharField(max_length=100 , blank=True, help_text="Nombre grupo cliente")
+
+
+class ComodinCliente(models.Model):
+    cli_ccom = models.IntegerField(primary_key=True, editable=True)
+    cli_ncom = models.CharField(max_length=100, blank=True, help_text="Nombre comodin", null=True)
+
+
+    
 
 class Clientes(models.Model):
     cli_codi = models.IntegerField(primary_key=True, editable=True)
@@ -67,13 +76,15 @@ class Clientes(models.Model):
     cli_alta = models.DateField(blank=True, null=True, help_text="Fecha alta cliente")
     cli_baja = models.DateField(blank=True, null=True, help_text="Fecha baja cliente")	
     #relaciones
+    cli_ccom = models.ForeignKey(ComodinCliente, on_delete=models.PROTECT, related_name="ComodinCliente")
     can_codi = models.ForeignKey(CanalVenta, on_delete=models.PROTECT, related_name="Canal de venta")
     zon_codi = models.ForeignKey(Zona, on_delete=models.PROTECT, related_name="Zona")
     grc_codi = models.ForeignKey(GrupoCliente, on_delete=models.PROTECT, related_name="Grupo cliente")
     loc_codi = models.ForeignKey(Localidad, on_delete=models.PROTECT, related_name="Localidad")
     civ_codi = models.ForeignKey(CondicionIva, on_delete=models.PROTECT, related_name="Condicion IVA")
     per_codi = models.ForeignKey(LegajoPersonal, on_delete=models.PROTECT, related_name="Legajo personal")
-    
+
+
 
 
 
@@ -112,8 +123,9 @@ class Proveedor(models.Model):
     loc_codi = models.ForeignKey(Localidad, on_delete=models.PROTECT, related_name="Localidad")
     civ_codi = models.ForeignKey(CondicionIva, on_delete=models.PROTECT, related_name="Condicion IVA")
 
-
-
+class ComodinArticulo(models.Model):
+    art_ccom = models.IntegerField(primary_key=True, editable=True)
+    art_ncom = models.CharField(max_length=100, blank=True, help_text="Nombre comodin", null=True)
 
 
 class Articulos(models.Model):
@@ -122,7 +134,7 @@ class Articulos(models.Model):
     art_medi = models.CharField(max_length=100, blank=True, help_text="Medida", null=True)                                       #REVISAR
     art_umed = models.CharField(max_length=100, blank=True, help_text="Unidad de medida", null=True)                             #REVISAR
     art_uequ = models.CharField(max_length=100, blank=True, help_text="Unidades x bulto", null=True)                             #REVISAR
-    art_ucos = models.CharField(max_length=100, blank=True, help_text="Ultimo costo", null=True)                             
+    art_ucos = models.DecimalField(max_length=30,decimal_places=2, blank=True, help_text="Costo", null=True)                          
     art_tprec = models.CharField(max_length=20, blank=True, help_text="Tipo precio", null=True)
     art_prec = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Precio articulo", null=True)
     art_pnet = models.DecimalField(max_length=30, blank=True, help_text="Precio neto", null=True)
@@ -132,6 +144,7 @@ class Articulos(models.Model):
     art_habi = models.BooleanField(default=False, help_text="Articulo habilitado/no", null=True)
     art_pesa = models.BooleanField(default=False, help_text="Pesable/no", null=True)                  
     #relaciones
+    art_ccom = models.ForeignKey(ComodinArticulo, on_delete=models.PROTECT, related_name="ComodinArticulo")
     pro_codi = models.ForeignKey(Proveedor, on_delete=models.PROTECT, related_name="Proveedor")
     sru_codi = models.ForeignKey(SubRubro, on_delete=models.PROTECT, related_name="Subrubro")
     mar_codi = models.ForeignKey(Marca, on_delete=models.PROTECT, related_name="Marca")
@@ -217,5 +230,13 @@ class DetalleVenta(models.Model):
         ]
 
 
+#--------------------------------------------------------COBRANZAS↓-------------------------------------------------------------------------
 
-#-----------------------------------------------------------------------------------------------------------------------------
+class Cobranzas(models.Model):
+    cob_codi = models.IntegerField(primary_key=True,editable=True)
+    cob_fech = models.DateField(blank=True, null=True, help_text="Fecha cobro")
+    cob_itot = models.DecimalField(max_length=30, decimal_places=2,blank=True, help_text="cobro total", null=True)
+    cli_codi = models.ForeignKey(Clientes, on_delete=models.PROTECT,related_name="Clientes")
+    suc_codi = models.ForeignKey(Sucursal, on_delete=models.PROTECT, related_name="Sucursal")
+
+    
