@@ -28,7 +28,7 @@ router.register(r'localidades', LocalidadViewSet, basename='localidad')
 router.register(r'condiciones-iva', CondicionIvaViewSet, basename='condicioniva')
 router.register(r'legajos-personal', LegajoPersonalViewSet, basename='legajopersonal')
 router.register(r'grupos-cliente', GrupoClienteViewSet, basename='grupocliente')
-router.register(r'comodines-cliente', ComodinClienteViewSet, basename='comodincliente')
+router.register(r'comodin-cliente', ComodinClienteViewSet, basename='comodincliente')
 router.register(r'clientes', ClientesViewSet, basename='cliente')
 
 #----------------------------------------------------------------ARTICULOS↓------------------------------------------------------------
@@ -37,14 +37,14 @@ router.register(r'subrubros', SubRubroViewSet, basename='subrubro')
 router.register(r'submarcas', SubMarcaViewSet, basename='submarca')
 router.register(r'marcas', MarcaViewSet, basename='marca')
 router.register(r'proveedores', ProveedorViewSet, basename='proveedor')
-router.register(r'comodines-articulo', ComodinArticuloViewSet, basename='comodinarticulo')
+router.register(r'comodin-articulo', ComodinArticuloViewSet, basename='comodinarticulo')
 router.register(r'articulos', ArticulosViewSet, basename='articulo')
 
 #---------------------------------------------------------------VENTAS↓-----------------------------------------------------------------
 router.register(r'comprobantes', ComprobanteViewSet, basename='comprobante')
 router.register(r'sucursales', SucursalViewSet, basename='sucursal')
 router.register(r'condiciones-venta', CondicionVentaViewSet, basename='condicionventa')
-router.register(r'comodines-venta', ComodinVentaViewSet, basename='comodinventa')
+router.register(r'comodin-venta', ComodinVentaViewSet, basename='comodinventa')
 router.register(r'ventas', VentasViewSet, basename='venta')
 router.register(r'detalles-venta', DetalleVentaViewSet, basename='detalleventa')
 

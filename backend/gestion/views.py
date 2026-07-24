@@ -9,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 
 from .models import (
     General,
@@ -33,8 +34,37 @@ from .serializers import (
 
 
 @api_view(['GET'])
-def api_root(request):
-    return Response({})
+def api_root(request, format=None):
+    endpoints = {
+        'general': 'general-list',
+        'zonas': 'zona-list',
+        'canales-venta': 'canalventa-list',
+        'provincias': 'provincia-list',
+        'localidades': 'localidad-list',
+        'condiciones-iva': 'condicioniva-list',
+        'legajos-personal': 'legajopersonal-list',
+        'grupos-cliente': 'grupocliente-list',
+        'comodin-cliente': 'comodincliente-list',
+        'clientes': 'cliente-list',
+        'rubros': 'rubro-list',
+        'subrubros': 'subrubro-list',
+        'submarcas': 'submarca-list',
+        'marcas': 'marca-list',
+        'proveedores': 'proveedor-list',
+        'comodin-articulo': 'comodinarticulo-list',
+        'articulos': 'articulo-list',
+        'comprobantes': 'comprobante-list',
+        'sucursales': 'sucursal-list',
+        'condiciones-venta': 'condicionventa-list',
+        'comodin-venta': 'comodinventa-list',
+        'ventas': 'venta-list',
+        'detalles-venta': 'detalleventa-list',
+        'cobranzas': 'cobranza-list',
+    }
+    return Response({
+        key: reverse(name, request=request, format=format)
+        for key, name in endpoints.items()
+    })
 
 
 # ================================================================
