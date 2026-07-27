@@ -264,7 +264,6 @@ DESTINOS = {
     "smar": "submarcas",
     "marc": "marcas",
     "suc": "sucursales",
-    # "cvta": "condiciones_venta",
     "ccov": "comodines_venta",
     "ccoma": "comodines_articulo",
     "clie": "clientes",

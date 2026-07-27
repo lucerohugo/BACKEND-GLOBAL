@@ -54,7 +54,6 @@ def api_root(request, format=None):
         'comodin-articulo': 'comodinarticulo-list',
         'articulos': 'articulo-list',
         'sucursales': 'sucursal-list',
-        'condiciones-venta': 'condicionventa-list',
         'comodin-venta': 'comodinventa-list',
         'ventas': 'venta-list',
         'detalles-venta': 'detalleventa-list',

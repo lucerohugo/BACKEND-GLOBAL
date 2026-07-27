@@ -15,7 +15,10 @@ from .models import (
 class GeneralSerializer(serializers.ModelSerializer):
     class Meta:
         model = General
-        fields = '__all__'
+        fields = [
+            'gen_codi', 'gen_nomb', 'gen_logo', 'gen_logB', 'gen_cuit',
+            'gen_dire', 'gen_tele',
+        ]
 
 
 #----------------------------------------------------------CLIENTES↓--------------------------------------------------------------------
@@ -23,19 +26,19 @@ class GeneralSerializer(serializers.ModelSerializer):
 class ZonaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Zona
-        fields = '__all__'
+        fields = ['zon_codi', 'zon_nomb']
 
 
 class CanalVentaSerializer(serializers.ModelSerializer):
     class Meta:
         model = CanalVenta
-        fields = '__all__'
+        fields = ['can_codi', 'can_nomb']
 
 
 class ProvinciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Provincia
-        fields = '__all__'
+        fields = ['pci_codi', 'pci_nomb']
 
 
 class LocalidadSerializer(serializers.ModelSerializer):
@@ -43,31 +46,34 @@ class LocalidadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Localidad
-        fields = '__all__'
+        fields = ['loc_codi', 'loc_nomb', 'loc_cpos', 'pci_codi', 'pci_nomb']
 
 
 class CondicionIvaSerializer(serializers.ModelSerializer):
     class Meta:
         model = CondicionIva
-        fields = '__all__'
+        fields = ['civ_codi', 'civ_nomb']
 
 
 class LegajoPersonalSerializer(serializers.ModelSerializer):
     class Meta:
         model = LegajoPersonal
-        fields = '__all__'
+        fields = [
+            'per_codi', 'per_nomb', 'per_Ndoc', 'Per_CUIL', 'Per_Celu',
+            'Per_mail', 'Per_domi', 'Per_loca',
+        ]
 
 
 class GrupoClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrupoCliente
-        fields = '__all__'
+        fields = ['grc_codi', 'grc_nomb']
 
 
 class ComodinClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComodinCliente
-        fields = '__all__'
+        fields = ['cli_ccom', 'cli_ncom']
 
 
 class ClientesSerializer(serializers.ModelSerializer):
@@ -81,7 +87,12 @@ class ClientesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Clientes
-        fields = '__all__'
+        fields = [
+            'cli_codi', 'cli_nomb', 'cli_dire', 'cli_celu', 'cli_emai',
+            'cli_ndoc', 'cli_cuit', 'cli_alta', 'cli_baja',
+            'cli_ccom', 'can_codi', 'zon_codi', 'grc_codi', 'loc_codi', 'civ_codi', 'per_codi',
+            'cli_ncom', 'can_nomb', 'zon_nomb', 'grc_nomb', 'loc_nomb', 'civ_nomb', 'per_nomb',
+        ]
 
 
 #----------------------------------------------------------------ARTICULOS↓------------------------------------------------------------
@@ -89,7 +100,7 @@ class ClientesSerializer(serializers.ModelSerializer):
 class RubroSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rubro
-        fields = '__all__'
+        fields = ['rub_codi', 'rub_nomb']
 
 
 class SubRubroSerializer(serializers.ModelSerializer):
@@ -97,19 +108,19 @@ class SubRubroSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SubRubro
-        fields = '__all__'
+        fields = ['sru_codi', 'sru_nomb', 'rub_codi', 'rub_nomb']
 
 
 class SubMarcaSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubMarca
-        fields = '__all__'
+        fields = ['smar_codi', 'smar_nomb']
 
 
 class MarcaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Marca
-        fields = '__all__'
+        fields = ['mar_codi', 'mar_nomb']
 
 
 class ProveedorSerializer(serializers.ModelSerializer):
@@ -118,13 +129,17 @@ class ProveedorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Proveedor
-        fields = '__all__'
+        fields = [
+            'pro_codi', 'Pro_nomb', 'pro_Cuit', 'pro_dire', 'pro_celu', 'pro_ibru',
+            'loc_codi', 'civ_codi',
+            'loc_nomb', 'civ_nomb',
+        ]
 
 
 class ComodinArticuloSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComodinArticulo
-        fields = '__all__'
+        fields = ['art_ccom', 'art_ncom']
 
 
 class ArticulosSerializer(serializers.ModelSerializer):
@@ -136,7 +151,13 @@ class ArticulosSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Articulos
-        fields = '__all__'
+        fields = [
+            'art_codi', 'art_nomb', 'art_medi', 'art_umed', 'art_uequ', 'art_ucos',
+            'art_tprec', 'art_prec', 'art_pnet', 'art_pfin', 'art_tiva', 'art_iint',
+            'art_habi', 'art_pesa',
+            'art_ccom', 'pro_codi', 'sru_codi', 'mar_codi', 'smar_codi',
+            'art_ncom', 'pro_nomb', 'sru_nomb', 'mar_nomb', 'smar_nomb',
+        ]
 
 
 #---------------------------------------------------------------VENTAS↓-----------------------------------------------------------------
@@ -146,13 +167,13 @@ class ArticulosSerializer(serializers.ModelSerializer):
 class SucursalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sucursal
-        fields = '__all__'
+        fields = ['suc_codi', 'suc_nomb']
 
 
 class ComodinVentaSerializer(serializers.ModelSerializer):
     class Meta:
         model = ComodinVenta
-        fields = '__all__'
+        fields = ['vta_ccom', 'vta_ncom']
 
 
 class DetalleVentaSerializer(serializers.ModelSerializer):
@@ -160,7 +181,12 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DetalleVenta
-        fields = '__all__'
+        fields = [
+            'dvt_codi', 'vta_codi', 'art_codi',
+            'dvt_iOri', 'dvt_iuni', 'dvt_itot', 'dvt_cost', 'dvt_iiva',
+            'dvt_igra', 'dvt_iexe', 'dvt_iint', 'dvt_caPi', 'dvt_cant',
+            'art_nomb',
+        ]
 
 
 class VentasSerializer(serializers.ModelSerializer):
@@ -171,7 +197,13 @@ class VentasSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Ventas
-        fields = '__all__'
+        fields = [
+            'vta_codi', 'vta_fech', 'vta_cvta', 'vta_itoR', 'vta_igra',
+            'vta_iexe', 'vta_iiva', 'vta_iiin', 'vta_ibts',
+            'cli_codi', 'suc_codi', 'vta_ccom', 'gen_codi',
+            'cli_nomb', 'suc_nomb', 'vta_ncom',
+            'detalles',
+        ]
 
 
 #--------------------------------------------------------COBRANZAS↓---------------------------------------------------------------------
@@ -182,4 +214,7 @@ class CobranzasSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cobranzas
-        fields = '__all__'
+        fields = [
+            'cob_codi', 'cob_fech', 'cob_itot', 'cli_codi', 'suc_codi',
+            'cli_nomb', 'suc_nomb',
+        ]
