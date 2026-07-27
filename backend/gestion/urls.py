@@ -9,7 +9,7 @@ from .views import (
     ComodinClienteViewSet, ClientesViewSet,
     RubroViewSet, SubRubroViewSet, SubMarcaViewSet, MarcaViewSet,
     ProveedorViewSet, ComodinArticuloViewSet, ArticulosViewSet,
-    ComprobanteViewSet, SucursalViewSet, CondicionVentaViewSet,
+    SucursalViewSet,
     ComodinVentaViewSet, VentasViewSet, DetalleVentaViewSet,
     CobranzasViewSet,
     importar_datos,
@@ -41,9 +41,8 @@ router.register(r'comodin-articulo', ComodinArticuloViewSet, basename='comodinar
 router.register(r'articulos', ArticulosViewSet, basename='articulo')
 
 #---------------------------------------------------------------VENTAS↓-----------------------------------------------------------------
-router.register(r'comprobantes', ComprobanteViewSet, basename='comprobante')
+
 router.register(r'sucursales', SucursalViewSet, basename='sucursal')
-router.register(r'condiciones-venta', CondicionVentaViewSet, basename='condicionventa')
 router.register(r'comodin-venta', ComodinVentaViewSet, basename='comodinventa')
 router.register(r'ventas', VentasViewSet, basename='venta')
 router.register(r'detalles-venta', DetalleVentaViewSet, basename='detalleventa')

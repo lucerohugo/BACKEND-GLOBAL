@@ -79,7 +79,6 @@ MAPEO = {
     "per": [
         ("per_codi", int),
         ("per_nomb", str),
-        ("per_Tdoc", str),
         ("per_Ndoc", str),
         ("Per_CUIL", str),
         ("Per_Celu", str),
@@ -93,6 +92,7 @@ MAPEO = {
         ("grc_nomb", str),
     ],
 
+    
     "ccli": [
         ("cli_ccom", int),
         ("cli_ncom", str),
@@ -137,6 +137,8 @@ MAPEO = {
         ("civ_codi", int),
     ],
 
+
+     
     "ccoma": [
         ("art_ccom", int),
         ("art_ncom", str),
@@ -152,7 +154,7 @@ MAPEO = {
         ("cli_cuit", str),
         ("cli_alta", str),
         ("cli_baja", str),
-        ("cli_ccom", int),
+        ("cli_ccom", int), #comodin cliente
         ("can_codi", int),
         ("zon_codi", int),
         ("grc_codi", int),
@@ -176,16 +178,11 @@ MAPEO = {
         ("art_iint", str),
         ("art_habi", bool),
         ("art_pesa", bool),
-        ("art_ccom", int),
+        ("art_ccom", int), 
         ("pro_codi", int),
         ("sru_codi", int),
         ("mar_codi", int),
         ("smar_codi", int),
-    ],
-
-    "comp": [
-        ("com_codi", int),
-        ("com_nomb", str),
     ],
 
     "suc": [
@@ -193,10 +190,11 @@ MAPEO = {
         ("suc_nomb", str),
     ],
 
-    "cvta": [
-        ("vta_cvta", str),
-    ],
+    # "cvta": [
+    #     ("vta_cvta", str),
+    # ],
 
+    #comodin de ventas 
     "ccov": [
         ("vta_ccom", int),
         ("vta_ncom", str),
@@ -205,6 +203,7 @@ MAPEO = {
     "vta": [
         ("vta_codi", int),
         ("vta_fech", str),
+        ("vta_cvta", str),
         ("vta_itoR", str),
         ("vta_igra", str),
         ("vta_iexe", str),
@@ -212,14 +211,13 @@ MAPEO = {
         ("vta_iiin", str),
         ("vta_ibts", str),
         ("cli_codi", int),
-        ("vta_cvta", str),
         ("suc_codi", int),
-        ("vta_ccom", int),
+        ("vta_ccom", int), #comodin venta
         ("gen_codi", int),
     ],
 
     "dvt": [
-        ("dvt_codi", int),
+        # ("dvt_codi", int), #es autonumerico en el back
         ("vta_codi", int),
         ("art_codi", int),
         ("dvt_iOri", str),
@@ -265,9 +263,8 @@ DESTINOS = {
     "rub": "rubros",
     "smar": "submarcas",
     "marc": "marcas",
-    "comp": "comprobantes",
     "suc": "sucursales",
-    "cvta": "condiciones_venta",
+    # "cvta": "condiciones_venta",
     "ccov": "comodines_venta",
     "ccoma": "comodines_articulo",
     "clie": "clientes",

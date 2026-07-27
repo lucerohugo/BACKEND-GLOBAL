@@ -16,7 +16,7 @@ from .models import (
     Zona, CanalVenta, Provincia, Localidad, CondicionIva, LegajoPersonal,
     GrupoCliente, ComodinCliente, Clientes,
     Rubro, SubRubro, SubMarca, Marca, Proveedor, ComodinArticulo, Articulos,
-    Comprobante, Sucursal, CondicionVenta, ComodinVenta, Ventas, DetalleVenta,
+    Sucursal, ComodinVenta, Ventas, DetalleVenta,
     Cobranzas,
 )
 from .permissions import IsAdminOrReadOnly, IsAuthenticatedReadWrite
@@ -27,7 +27,7 @@ from .serializers import (
     ComodinClienteSerializer, ClientesSerializer,
     RubroSerializer, SubRubroSerializer, SubMarcaSerializer, MarcaSerializer,
     ProveedorSerializer, ComodinArticuloSerializer, ArticulosSerializer,
-    ComprobanteSerializer, SucursalSerializer, CondicionVentaSerializer,
+    SucursalSerializer,
     ComodinVentaSerializer, VentasSerializer, DetalleVentaSerializer,
     CobranzasSerializer,
 )
@@ -53,7 +53,6 @@ def api_root(request, format=None):
         'proveedores': 'proveedor-list',
         'comodin-articulo': 'comodinarticulo-list',
         'articulos': 'articulo-list',
-        'comprobantes': 'comprobante-list',
         'sucursales': 'sucursal-list',
         'condiciones-venta': 'condicionventa-list',
         'comodin-venta': 'comodinventa-list',
@@ -293,13 +292,6 @@ class ArticulosViewSet(BulkCreateMixin, BaseViewSet):
 
 #---------------------------------------------------------------VENTAS↓-----------------------------------------------------------------
 
-class ComprobanteViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Comprobante.objects.all()
-    serializer_class = ComprobanteSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    lookup_field_name = 'com_codi'
-    search_fields = ['com_nomb']
-    ordering = ['com_nomb']
 
 
 class SucursalViewSet(BulkCreateMixin, BaseViewSet):
@@ -309,15 +301,6 @@ class SucursalViewSet(BulkCreateMixin, BaseViewSet):
     lookup_field_name = 'suc_codi'
     search_fields = ['suc_nomb']
     ordering = ['suc_nomb']
-
-
-class CondicionVentaViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = CondicionVenta.objects.all()
-    serializer_class = CondicionVentaSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    lookup_field_name = 'vta_cvta'
-    search_fields = ['vta_cvta']
-    ordering = ['vta_cvta']
 
 
 class ComodinVentaViewSet(BulkCreateMixin, BaseViewSet):
@@ -374,16 +357,14 @@ MODELOS = {
     "rubros": (Rubro, "rub_codi"),
     "submarcas": (SubMarca, "smar_codi"),
     "marcas": (Marca, "mar_codi"),
-    "comprobantes": (Comprobante, "com_codi"),
     "sucursales": (Sucursal, "suc_codi"),
-    "condiciones_venta": (CondicionVenta, "vta_cvta"),
     "comodines_venta": (ComodinVenta, "vta_ccom"),
     "comodines_articulo": (ComodinArticulo, "art_ccom"),
     "clientes": (Clientes, "cli_codi"),                    # depende de ComodinCliente, CanalVenta, Zona, GrupoCliente, Localidad, CondicionIva, LegajoPersonal
     "subrubros": (SubRubro, "sru_codi"),                   # depende de Rubro
     "proveedores": (Proveedor, "pro_codi"),                # depende de Localidad, CondicionIva
     "articulos": (Articulos, "art_codi"),                  # depende de ComodinArticulo, Proveedor, SubRubro, Marca, SubMarca
-    "ventas": (Ventas, "vta_codi"),                        # depende de Clientes, CondicionVenta, Sucursal, ComodinVenta, General
+    "ventas": (Ventas, "vta_codi"),                        # depende de Clientes, Sucursal, ComodinVenta, General
     "detalles_venta": (DetalleVenta, "dvt_codi"),          # depende de Ventas, Articulos
     "cobranzas": (Cobranzas, "cob_codi"),                  # depende de Clientes, Sucursal
 }
@@ -467,42 +448,68 @@ def importar_datos(request):
                         # ============================================
                         # LOOKUP (PK del propio modelo)
                         # ============================================
-                        lookup_value = (
-                            data_item.get(lookup)
-                            or data_item.get(f"{lookup}_id")
-                        )
 
-                        if lookup_value is None:
-                            resultados[key]["error"] += 1
-                            resultados[key]["detalle"].append({
-                                "error": f"Falta campo {lookup}",
-                                "data": item,
-                            })
-                            continue
+                        # ============================================
+                        # DETALLE VENTA (NO TIENE dvt_codi)
+                        # ============================================
+                        if model == DetalleVenta:
 
-                        lookup_field = (
-                            f"{lookup}_id"
-                            if any(
-                                f.name == lookup and f.is_relation
-                                for f in model._meta.fields
+                            obj, created = DetalleVenta.objects.update_or_create(
+                                vta_codi_id=data_item.pop("vta_codi_id"),
+                                art_codi_id=data_item.pop("art_codi_id"),
+                                defaults=data_item,
                             )
-                            else lookup
-                        )
-
-                        data_item.pop(lookup, None)
-                        data_item.pop(f"{lookup}_id", None)
 
                         # ============================================
-                        # UPDATE OR CREATE
+                        # RESTO DE LOS MODELOS
                         # ============================================
-                        obj, created = model.objects.update_or_create(
-                            **{lookup_field: lookup_value},
-                            defaults=data_item,
-                        )
+                        else:
+
+                            lookup_value = (
+                                data_item.get(lookup)
+                                or data_item.get(f"{lookup}_id")
+                            )
+
+                            if lookup_value is None:
+                                resultados[key]["error"] += 1
+                                resultados[key]["detalle"].append({
+                                    "error": f"Falta campo {lookup}",
+                                    "data": item,
+                                })
+                                continue
+
+                            lookup_field = (
+                                f"{lookup}_id"
+                                if any(
+                                    f.name == lookup and f.is_relation
+                                    for f in model._meta.fields
+                                )
+                                else lookup
+                            )
+
+                            data_item.pop(lookup, None)
+                            data_item.pop(f"{lookup}_id", None)
+
+                            obj, created = model.objects.update_or_create(
+                                **{lookup_field: lookup_value},
+                                defaults=data_item,
+                            )
 
                         resultados[key]["ok"] += 1
 
                 except Exception as e:
+                    print("\n" + "=" * 100)
+                    print(f"ERROR IMPORTANDO TABLA: {key}")
+                    print(f"MODELO: {model.__name__}")
+                    print(f"LOOKUP: {lookup}")
+                    print("ITEM ORIGINAL:")
+                    print(item)
+                    print("DATA_ITEM:")
+                    print(data_item)
+                    print("\nTRACEBACK:")
+                    traceback.print_exc()
+                    print("=" * 100 + "\n")
+
                     resultados[key]["error"] += 1
                     resultados[key]["detalle"].append({
                         "error": str(e),

@@ -5,7 +5,7 @@ from .models import (
     Zona, CanalVenta, Provincia, Localidad, CondicionIva, LegajoPersonal,
     GrupoCliente, ComodinCliente, Clientes,
     Rubro, SubRubro, SubMarca, Marca, Proveedor, ComodinArticulo, Articulos,
-    Comprobante, Sucursal, CondicionVenta, ComodinVenta, Ventas, DetalleVenta,
+    Sucursal, ComodinVenta, Ventas, DetalleVenta,
     Cobranzas,
 )
 
@@ -141,21 +141,11 @@ class ArticulosSerializer(serializers.ModelSerializer):
 
 #---------------------------------------------------------------VENTAS↓-----------------------------------------------------------------
 
-class ComprobanteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comprobante
-        fields = '__all__'
 
 
 class SucursalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sucursal
-        fields = '__all__'
-
-
-class CondicionVentaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CondicionVenta
         fields = '__all__'
 
 

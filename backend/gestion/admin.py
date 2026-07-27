@@ -5,7 +5,7 @@ from .models import (
     Zona, CanalVenta, Provincia, Localidad, CondicionIva, LegajoPersonal,
     GrupoCliente, ComodinCliente, Clientes,
     Rubro, SubRubro, SubMarca, Marca, Proveedor, ComodinArticulo, Articulos,
-    Comprobante, Sucursal, CondicionVenta, ComodinVenta, Ventas, DetalleVenta,
+    Sucursal, ComodinVenta, Ventas, DetalleVenta,
     Cobranzas,
 )
 
@@ -162,25 +162,12 @@ class ArticulosAdmin(admin.ModelAdmin):
 
 #-------------------------------------------------------------------------VENTAS↓---------------------------------------------------------------------------------
 
-@admin.register(Comprobante)
-class ComprobanteAdmin(admin.ModelAdmin):
-    list_display = ['com_codi', 'com_nomb']
-    search_fields = ['com_nomb']
-    ordering = ['com_nomb']
-
 
 @admin.register(Sucursal)
 class SucursalAdmin(admin.ModelAdmin):
     list_display = ['suc_codi', 'suc_nomb']
     search_fields = ['suc_nomb']
     ordering = ['suc_nomb']
-
-
-@admin.register(CondicionVenta)
-class CondicionVentaAdmin(admin.ModelAdmin):
-    list_display = ['vta_cvta']
-    search_fields = ['vta_cvta']
-    ordering = ['vta_cvta']
 
 
 @admin.register(ComodinVenta)
@@ -201,7 +188,7 @@ class DetalleVentaInline(admin.TabularInline):
 class VentasAdmin(admin.ModelAdmin):
     inlines = [DetalleVentaInline]
     list_display = [
-        'vta_codi', 'vta_fech', 'cli_codi', 'vta_cvta', 'suc_codi',
+        'vta_codi', 'vta_fech', 'vta_cvta', 'cli_codi', 'suc_codi',
         'gen_codi', 'vta_igra', 'vta_iiva',
     ]
     list_filter = ['vta_fech', 'suc_codi', 'vta_cvta', 'gen_codi']
