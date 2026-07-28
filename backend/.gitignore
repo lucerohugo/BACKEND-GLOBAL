@@ -9,3 +9,4 @@ venv/
 supabase/
 
 /node_modules
+/subidaInfo

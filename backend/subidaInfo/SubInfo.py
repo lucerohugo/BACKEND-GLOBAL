@@ -3,6 +3,7 @@ import os
 import json
 import requests
 import csv
+from decimal import Decimal
 # usar esta version
 
 # ============================================================
@@ -287,6 +288,40 @@ def convertir(valor, tipo):
     valor = str(valor).strip()
 
     if valor == "":
+        return ""
+
+    try:
+
+        if tipo == int:
+
+            valor = valor.replace(",", ".")
+
+            return int(float(valor))
+
+        if tipo == bool:
+
+            return valor.lower() in (
+                "true",
+                "1",
+                "t",
+                "s",
+                "si",
+                "y"
+            )
+
+        # Normalizar números decimales
+        valor = valor.replace(",", ".")
+
+        try:
+            numero = Decimal(valor)
+            return str(numero.normalize())
+        except:
+            pass
+
+        return valor
+
+    except:
+
         return ""
 
     try:

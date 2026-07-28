@@ -222,7 +222,7 @@ class Ventas(models.Model):
     vta_itoR = models.CharField(max_length=100, blank=True, help_text="Total real", null=True)
     vta_igra = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe gravado", null=True)
     vta_iexe = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe exento", null=True)
-    vta_iiva = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe IVA", null=True)
+    vta_iiva = models.DecimalField(max_digits=5, decimal_places=2, help_text="IVA del artículo (%)", null=True)
     vta_iiin = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe de impuesto interno", null=True)
     vta_ibts = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Total ingreso brutos", null=True)
     #relaciones
@@ -261,7 +261,7 @@ class DetalleVenta(models.Model):
     dvt_iuni = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Precio unitario", null=True)
     dvt_itot = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Total", null=True)
     dvt_cost = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Costo", null=True)
-    dvt_iiva = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe IVA", null=True)
+    dvt_iiva = models.DecimalField(max_digits=5, decimal_places=2,  help_text="detalle IVA del artículo (%)", null=True)
     dvt_igra = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe gravado", null=True)
     dvt_iexe = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe exento", null=True)
     dvt_iint = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Impuesto interno unitario", null=True)
