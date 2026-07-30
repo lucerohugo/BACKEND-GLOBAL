@@ -82,7 +82,7 @@ class ComodinClienteAdmin(admin.ModelAdmin):
 class ClientesAdmin(admin.ModelAdmin):
     list_display = [
         'cli_codi', 'cli_nomb', 'cli_cuit', 'loc_codi', 'can_codi',
-        'zon_codi', 'grc_codi', 'civ_codi', 'per_codi', 'cli_alta', 'cli_baja',
+        'zon_codi', 'grc_codi', 'civ_codi', 'per_codi', 'cli_alta_display', 'cli_baja',
     ]
     list_filter = ['loc_codi__pci_codi', 'can_codi', 'zon_codi', 'grc_codi', 'civ_codi']
     search_fields = ['cli_nomb', 'cli_cuit', 'cli_ndoc']
@@ -101,6 +101,10 @@ class ClientesAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+    @admin.display(description='Cli alta', ordering='cli_alta')
+    def cli_alta_display(self, obj):
+        return obj.cli_alta.strftime('%d/%m/%Y') if obj.cli_alta else '-'
 
 
 #------------------------------------------------------------------------ARTICULOS↓----------------------------------------------------------------------

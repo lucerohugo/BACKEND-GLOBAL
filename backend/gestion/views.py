@@ -19,7 +19,6 @@ from .models import (
     Sucursal, ComodinVenta, Ventas, DetalleVenta,
     Cobranzas,
 )
-from .permissions import IsAdminOrReadOnly, IsAuthenticatedReadWrite
 from .serializers import (
     GeneralSerializer,
     ZonaSerializer, CanalVentaSerializer, ProvinciaSerializer, LocalidadSerializer,
@@ -135,7 +134,6 @@ class BulkCreateMixin:
 class GeneralViewSet(BulkCreateMixin, BaseViewSet):
     queryset = General.objects.all()
     serializer_class = GeneralSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'gen_codi'
     search_fields = ['gen_nomb', 'gen_cuit']
     ordering = ['gen_nomb']
@@ -146,7 +144,6 @@ class GeneralViewSet(BulkCreateMixin, BaseViewSet):
 class ZonaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Zona.objects.all()
     serializer_class = ZonaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'zon_codi'
     search_fields = ['zon_nomb']
     ordering = ['zon_nomb']
@@ -155,7 +152,6 @@ class ZonaViewSet(BulkCreateMixin, BaseViewSet):
 class CanalVentaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = CanalVenta.objects.all()
     serializer_class = CanalVentaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'can_codi'
     search_fields = ['can_nomb']
     ordering = ['can_nomb']
@@ -164,7 +160,6 @@ class CanalVentaViewSet(BulkCreateMixin, BaseViewSet):
 class ProvinciaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Provincia.objects.all()
     serializer_class = ProvinciaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'pci_codi'
     search_fields = ['pci_nomb']
     ordering = ['pci_nomb']
@@ -173,7 +168,6 @@ class ProvinciaViewSet(BulkCreateMixin, BaseViewSet):
 class LocalidadViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Localidad.objects.all()
     serializer_class = LocalidadSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'loc_codi'
     search_fields = ['loc_nomb', 'pci_codi__pci_nomb']
     ordering = ['loc_nomb']
@@ -182,7 +176,6 @@ class LocalidadViewSet(BulkCreateMixin, BaseViewSet):
 class CondicionIvaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = CondicionIva.objects.all()
     serializer_class = CondicionIvaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'civ_codi'
     search_fields = ['civ_nomb']
     ordering = ['civ_nomb']
@@ -191,7 +184,6 @@ class CondicionIvaViewSet(BulkCreateMixin, BaseViewSet):
 class LegajoPersonalViewSet(BulkCreateMixin, BaseViewSet):
     queryset = LegajoPersonal.objects.all()
     serializer_class = LegajoPersonalSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'per_codi'
     search_fields = ['per_nomb', 'Per_CUIL', 'per_Ndoc']
     ordering = ['per_nomb']
@@ -200,7 +192,6 @@ class LegajoPersonalViewSet(BulkCreateMixin, BaseViewSet):
 class GrupoClienteViewSet(BulkCreateMixin, BaseViewSet):
     queryset = GrupoCliente.objects.all()
     serializer_class = GrupoClienteSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'grc_codi'
     search_fields = ['grc_nomb']
     ordering = ['grc_nomb']
@@ -209,7 +200,6 @@ class GrupoClienteViewSet(BulkCreateMixin, BaseViewSet):
 class ComodinClienteViewSet(BulkCreateMixin, BaseViewSet):
     queryset = ComodinCliente.objects.all()
     serializer_class = ComodinClienteSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'cli_ccom'
     search_fields = ['cli_ncom']
     ordering = ['cli_ncom']
@@ -218,7 +208,6 @@ class ComodinClienteViewSet(BulkCreateMixin, BaseViewSet):
 class ClientesViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Clientes.objects.all()
     serializer_class = ClientesSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'cli_codi'
     search_fields = ['cli_nomb', 'cli_cuit', 'cli_ndoc']
     ordering = ['cli_nomb']
@@ -229,7 +218,6 @@ class ClientesViewSet(BulkCreateMixin, BaseViewSet):
 class RubroViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Rubro.objects.all()
     serializer_class = RubroSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'rub_codi'
     search_fields = ['rub_nomb']
     ordering = ['rub_nomb']
@@ -238,7 +226,6 @@ class RubroViewSet(BulkCreateMixin, BaseViewSet):
 class SubRubroViewSet(BulkCreateMixin, BaseViewSet):
     queryset = SubRubro.objects.all()
     serializer_class = SubRubroSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'sru_codi'
     search_fields = ['sru_nomb', 'rub_codi__rub_nomb']
     ordering = ['sru_nomb']
@@ -247,7 +234,6 @@ class SubRubroViewSet(BulkCreateMixin, BaseViewSet):
 class SubMarcaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = SubMarca.objects.all()
     serializer_class = SubMarcaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'smar_codi'
     search_fields = ['smar_nomb']
     ordering = ['smar_nomb']
@@ -256,7 +242,6 @@ class SubMarcaViewSet(BulkCreateMixin, BaseViewSet):
 class MarcaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Marca.objects.all()
     serializer_class = MarcaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'mar_codi'
     search_fields = ['mar_nomb']
     ordering = ['mar_nomb']
@@ -265,7 +250,6 @@ class MarcaViewSet(BulkCreateMixin, BaseViewSet):
 class ProveedorViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Proveedor.objects.all()
     serializer_class = ProveedorSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'pro_codi'
     search_fields = ['Pro_nomb', 'pro_Cuit']
     ordering = ['Pro_nomb']
@@ -274,7 +258,6 @@ class ProveedorViewSet(BulkCreateMixin, BaseViewSet):
 class ComodinArticuloViewSet(BulkCreateMixin, BaseViewSet):
     queryset = ComodinArticulo.objects.all()
     serializer_class = ComodinArticuloSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'art_ccom'
     search_fields = ['art_ncom']
     ordering = ['art_ncom']
@@ -283,7 +266,6 @@ class ComodinArticuloViewSet(BulkCreateMixin, BaseViewSet):
 class ArticulosViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Articulos.objects.all()
     serializer_class = ArticulosSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'art_codi'
     search_fields = ['art_nomb']
     ordering = ['art_nomb']
@@ -296,7 +278,6 @@ class ArticulosViewSet(BulkCreateMixin, BaseViewSet):
 class SucursalViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Sucursal.objects.all()
     serializer_class = SucursalSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'suc_codi'
     search_fields = ['suc_nomb']
     ordering = ['suc_nomb']
@@ -305,7 +286,6 @@ class SucursalViewSet(BulkCreateMixin, BaseViewSet):
 class ComodinVentaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = ComodinVenta.objects.all()
     serializer_class = ComodinVentaSerializer
-    permission_classes = [IsAdminOrReadOnly]
     lookup_field_name = 'vta_ccom'
     search_fields = ['vta_ncom']
     ordering = ['vta_ncom']
@@ -314,7 +294,6 @@ class ComodinVentaViewSet(BulkCreateMixin, BaseViewSet):
 class VentasViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Ventas.objects.all()
     serializer_class = VentasSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'vta_codi'
     search_fields = ['cli_codi__cli_nomb']
     ordering = ['-vta_fech', '-vta_codi']
@@ -323,7 +302,6 @@ class VentasViewSet(BulkCreateMixin, BaseViewSet):
 class DetalleVentaViewSet(BulkCreateMixin, BaseViewSet):
     queryset = DetalleVenta.objects.all()
     serializer_class = DetalleVentaSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'dvt_codi'
     search_fields = ['art_codi__art_nomb', 'vta_codi__cli_codi__cli_nomb']
     ordering = ['vta_codi']
@@ -334,7 +312,6 @@ class DetalleVentaViewSet(BulkCreateMixin, BaseViewSet):
 class CobranzasViewSet(BulkCreateMixin, BaseViewSet):
     queryset = Cobranzas.objects.all()
     serializer_class = CobranzasSerializer
-    permission_classes = [IsAuthenticatedReadWrite]
     lookup_field_name = 'cob_codi'
     search_fields = ['cli_codi__cli_nomb']
     ordering = ['-cob_fech']

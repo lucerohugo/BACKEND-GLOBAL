@@ -3,6 +3,7 @@ import os
 import json
 import requests
 import csv
+from datetime import datetime
 from decimal import Decimal
 # usar esta version
 
@@ -167,16 +168,16 @@ MAPEO = {
     "arbi": [
         ("art_codi", int),
         ("art_nomb", str),
-        ("art_medi", str),
-        ("art_umed", str),
-        ("art_uequ", str),
-        ("art_ucos", str),
+        ("art_medi", int),
+        ("art_umed", int),
+        ("art_uequ", int),
+        ("art_ucos", int),
         ("art_tprec", str),
-        ("art_prec", str),
-        ("art_pnet", str),
-        ("art_pfin", str),
+        ("art_prec", int),
+        ("art_pnet", int),
+        ("art_pfin", int),
         ("art_tiva", str),
-        ("art_iint", str),
+        ("art_iint", int),
         ("art_habi", bool),
         ("art_pesa", bool),
         ("art_ccom", int), 
@@ -205,10 +206,10 @@ MAPEO = {
         ("vta_codi", int),
         ("vta_fech", str),
         ("vta_cvta", str),
-        ("vta_itoR", str),
-        ("vta_igra", str),
-        ("vta_iexe", str),
-        ("vta_iiva", str),
+        ("vta_itoR", int),
+        ("vta_igra", int),
+        ("vta_iexe", int),
+        ("vta_iiva", Decimal),
         ("vta_iiin", str),
         ("vta_ibts", str),
         ("cli_codi", int),
@@ -230,7 +231,7 @@ MAPEO = {
         ("dvt_iexe", str),
         ("dvt_iint", str),
         ("dvt_caPi", str),
-        ("dvt_cant", str),
+        ("dvt_cant", int),
     ],
 
     "cob": [
@@ -458,6 +459,38 @@ def limpiar_texto(valor):
     return valor.strip()
 
 
+#tomo todo tipo de fechas 
+def normalizar_fecha(valor):
+
+    if valor is None:
+        return None
+
+    valor = str(valor).strip()
+
+    if valor == "":
+        return None
+
+    formatos = [
+        "%Y-%m-%d",   # 2026-07-27
+        "%m/%d/%y",   # 07/24/26
+        "%m/%d/%Y",   # 07/24/2026
+        "%d/%m/%Y",   # 24/07/2026
+        "%d/%m/%y",   # 24/07/26
+        "%d-%m-%Y",
+        "%d-%m-%y",
+        "%Y/%m/%d",
+    ]
+
+    for formato in formatos:
+        try:
+            fecha = datetime.strptime(valor, formato)
+            return fecha.strftime("%Y-%m-%d")
+        except ValueError:
+            pass
+
+    return valor
+
+
 # ============================================================
 # LEER TMP
 # ============================================================
@@ -509,6 +542,9 @@ def leer_tmp(ruta):
                 )
 
                 valor = limpiar_texto(valor)
+
+                if campo.endswith("_fech") or campo.endswith("_alta") or campo.endswith("_baja"):
+                    valor = normalizar_fecha(valor)
 
                 registro[campo] = valor
 
