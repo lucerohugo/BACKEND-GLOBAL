@@ -50,7 +50,7 @@ def generar_salida(estado):
 
 MAPEO = {
 
-    "gen": [
+    "gene": [
         ("gen_codi", int),
         ("gen_nomb", str),
         ("gen_cuit", str),
@@ -63,12 +63,12 @@ MAPEO = {
         ("zon_nomb", str),
     ],
 
-    "canv": [
+    "cana": [
         ("can_codi", int),
         ("can_nomb", str),
     ],
 
-    "pci": [
+    "pcia": [
         ("pci_codi", int),
         ("pci_nomb", str),
     ],
@@ -78,44 +78,47 @@ MAPEO = {
         ("civ_nomb", str),
     ],
 
-    "per": [
-        ("per_codi", int),
-        ("per_nomb", str),
-        ("per_Ndoc", str),
-        ("Per_CUIL", str),
-        ("Per_Celu", str),
-        ("Per_mail", str),
-        ("Per_domi", str),
-        ("Per_loca", str),
+    "pers": [
+        ("per_codi", int),      # 32
+        ("per_nomb", str),      # PEREZ JUAN CARLOS
+        ("per_Ndoc", str),      # 32773690
+        ("Per_CUIL", str),      # 20-32773690-7
+        ("Per_domi", str),      # EDISON 1305
+        ("Per_Celu", str),      # 15648402
+        ("Per_mail", str),      # prjuan18_86@hotmail.com
+        ("per_alta", str),      # 01/06/11
+        ("per_baja", str),      # /  /
+        ("loc_codi", str),      # 146
+
     ],
 
-    "grc": [
+    "grcl": [
         ("grc_codi", int),
         ("grc_nomb", str),
     ],
 
     
-    "ccli": [
+    "comc": [
         ("cli_ccom", int),
         ("cli_ncom", str),
     ],
 
     "loca": [
         ("loc_codi", int),
+        ("pci_codi", int),
         ("loc_nomb", str),
         ("loc_cpos", int),
-        ("pci_codi", int),
     ],
 
-    "rub": [
+    "rubr": [
         ("rub_codi", int),
         ("rub_nomb", str),
     ],
 
-    "sru": [
+    "srub": [
         ("sru_codi", int),
-        ("sru_nomb", str),
         ("rub_codi", int),
+        ("sru_nomb", str),
     ],
 
     "smar": [
@@ -131,8 +134,8 @@ MAPEO = {
     "prov": [
         ("pro_codi", int),
         ("Pro_nomb", str),
-        ("pro_Cuit", str),
         ("pro_dire", str),
+        ("pro_Cuit", str),
         ("pro_celu", str),
         ("pro_ibru", str),
         ("loc_codi", int),
@@ -141,7 +144,7 @@ MAPEO = {
 
 
      
-    "ccoma": [
+    "coma": [
         ("art_ccom", int),
         ("art_ncom", str),
     ],
@@ -149,23 +152,24 @@ MAPEO = {
     "clie": [
         ("cli_codi", int),
         ("cli_nomb", str),
+        ("cli_ndoc", str),
+        ("cli_cuit", str),
         ("cli_dire", str),
         ("cli_celu", str),
         ("cli_emai", str),
-        ("cli_ndoc", str),
-        ("cli_cuit", str),
         ("cli_alta", str),
         ("cli_baja", str),
-        ("cli_ccom", int), #comodin cliente
+ 
         ("can_codi", int),
         ("zon_codi", int),
         ("grc_codi", int),
         ("loc_codi", int),
         ("civ_codi", int),
         ("per_codi", int),
+        ("cli_ccom", int), #comodin cliente
     ],
 
-    "arbi": [
+    "arti": [
         ("art_codi", int),
         ("art_nomb", str),
         ("art_medi", int),
@@ -187,7 +191,7 @@ MAPEO = {
         ("smar_codi", int),
     ],
 
-    "suc": [
+    "sucu": [
         ("suc_codi", int),
         ("suc_nomb", str),
     ],
@@ -197,30 +201,34 @@ MAPEO = {
     # ],
 
     #comodin de ventas 
-    "ccov": [
+    "comv": [
         ("vta_ccom", int),
         ("vta_ncom", str),
     ],
 
-    "vta": [
+    "vtas": [
         ("vta_codi", int),
+        ("cli_codi", int),
         ("vta_fech", str),
         ("vta_cvta", str),
+        ("suc_codi", int),
+        ("gen_codi", int),
+        ("vta_ccom", int), #comodin venta
         ("vta_itoR", int),
         ("vta_igra", int),
         ("vta_iexe", int),
         ("vta_iiva", Decimal),
         ("vta_iiin", str),
         ("vta_ibts", str),
-        ("cli_codi", int),
-        ("suc_codi", int),
-        ("vta_ccom", int), #comodin venta
-        ("gen_codi", int),
     ],
 
-    "dvt": [
+    "dvta": [
         # ("dvt_codi", int), #es autonumerico en el back
         ("vta_codi", int),
+        # ("cli_codi", int), #ingnorar? ya lo traigo del vta_codi
+        # ("vta_fech", str),
+        # ("vta_cvta", str),
+        # ("suc_codi", int),
         ("art_codi", int),
         ("dvt_iOri", str),
         ("dvt_iuni", str),
@@ -253,27 +261,27 @@ MAPEO = {
 
 DESTINOS = {
 
-    "gen": "general",
-    "zona": "zonas",
-    "canv": "canales_venta",
-    "pci": "provincias",
-    "civa": "condiciones_iva",
-    "per": "legajos_personal",
-    "grc": "grupos_cliente",
-    "ccli": "comodines_cliente",
-    "loca": "localidades",
-    "rub": "rubros",
-    "smar": "submarcas",
-    "marc": "marcas",
-    "suc": "sucursales",
-    "ccov": "comodines_venta",
-    "ccoma": "comodines_articulo",
-    "clie": "clientes",
-    "sru": "subrubros",
-    "prov": "proveedores",
-    "arbi": "articulos",
-    "vta": "ventas",
-    "dvt": "detalles_venta",
+    "gene": "general", #es gene no gen 
+    "zona": "zonas", #este esta bien
+    "cana": "canales_venta", #es cana no canv
+    "pcia": "provincias", #es pcia no pci
+    "civa": "condiciones_iva", #este esta bien
+    "pers": "legajos_personal", #es pers no per
+    "grcl": "grupos_cliente", #es grcl no grc
+    "comc": "comodines_cliente", #comc no ccli
+    "loca": "localidades", #esta bien
+    "rubr": "rubros", #es rubr no rub
+    "smar": "submarcas", #este esta bien
+    "marc": "marcas", #este esta bien
+    "sucu": "sucursales", #es sucu no suc
+    "comv": "comodines_venta", #comv no ccov
+    "coma": "comodines_articulo", #coma , no ccoma
+    "clie": "clientes", #este esta bien
+    "srub": "subrubros", #es srub no sru
+    "prov": "proveedores", #esta bien
+    "arti": "articulos",  #esta bien
+    "vtas": "ventas",#es vtas no vta
+    "dvta": "detalles_venta", #es dvta no dvt
     "cob": "cobranzas",
 }
 
@@ -470,6 +478,12 @@ def normalizar_fecha(valor):
     if valor == "":
         return None
 
+
+    # Casos como "/  /", "//", "/", " / / "
+    if valor.replace("/", "").strip() == "":
+        return None
+
+
     formatos = [
         "%Y-%m-%d",   # 2026-07-27
         "%m/%d/%y",   # 07/24/26
@@ -534,6 +548,9 @@ def leer_tmp(ruta):
                 if pos >= len(row):
 
                     registro[campo] = ""
+                    continue
+
+                if campo == "_ignorar":
                     continue
 
                 valor = convertir(

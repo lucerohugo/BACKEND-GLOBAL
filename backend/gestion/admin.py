@@ -59,9 +59,14 @@ class CondicionIvaAdmin(admin.ModelAdmin):
 
 @admin.register(LegajoPersonal)
 class LegajoPersonalAdmin(admin.ModelAdmin):
-    list_display = ['per_codi', 'per_nomb', 'Per_CUIL', 'Per_Celu', 'Per_mail', 'Per_loca']
+    list_display = ['per_codi', 'per_nomb', 'Per_CUIL', 'Per_Celu', 'Per_mail', 'loc_codi', 'per_alta_display', 'per_baja']
+    list_filter = ['loc_codi']
     search_fields = ['per_nomb', 'Per_CUIL', 'per_Ndoc']
     ordering = ['per_nomb']
+
+    @admin.display(description='Per alta', ordering='per_alta')
+    def per_alta_display(self, obj):
+        return obj.per_alta.strftime('%d/%m/%Y') if obj.per_alta else '-'
 
 
 @admin.register(GrupoCliente)
@@ -185,7 +190,10 @@ class DetalleVentaInline(admin.TabularInline):
     model = DetalleVenta
     fk_name = 'vta_codi'
     extra = 1
-    fields = ['art_codi', 'dvt_cant', 'dvt_iuni', 'dvt_itot', 'dvt_iiva']
+    fields = [
+        'art_codi', 'dvt_cant', 'dvt_iuni', 'dvt_itot', 'dvt_iiva',
+        'dvt_iOri', 'dvt_cost', 'dvt_igra', 'dvt_iexe', 'dvt_iint', 'dvt_caPi',
+    ]
 
 
 @admin.register(Ventas)
@@ -196,7 +204,7 @@ class VentasAdmin(admin.ModelAdmin):
         'gen_codi', 'vta_igra', 'vta_iiva',
     ]
     list_filter = ['vta_fech', 'suc_codi', 'vta_cvta', 'gen_codi']
-    search_fields = ['cli_codi__cli_nomb']
+    search_fields = ['=vta_codi', 'cli_codi__cli_nomb']
     ordering = ['-vta_fech', '-vta_codi']
 
 

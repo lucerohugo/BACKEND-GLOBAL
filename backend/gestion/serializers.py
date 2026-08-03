@@ -16,7 +16,7 @@ class GeneralSerializer(serializers.ModelSerializer):
     class Meta:
         model = General
         fields = [
-            'gen_codi', 'gen_nomb', 'gen_logo', 'gen_logB', 'gen_cuit',
+            'gen_codi', 'gen_nomb', 'gen_logo', 'gen_cuit',
             'gen_dire', 'gen_tele',
         ]
 
@@ -56,11 +56,13 @@ class CondicionIvaSerializer(serializers.ModelSerializer):
 
 
 class LegajoPersonalSerializer(serializers.ModelSerializer):
+    loc_nomb = serializers.CharField(source='loc_codi.loc_nomb', read_only=True)
+
     class Meta:
         model = LegajoPersonal
         fields = [
             'per_codi', 'per_nomb', 'per_Ndoc', 'Per_CUIL', 'Per_Celu',
-            'Per_mail', 'Per_domi', 'Per_loca',
+            'Per_mail', 'per_alta', 'per_baja', 'Per_domi', 'loc_codi', 'loc_nomb',
         ]
 
 

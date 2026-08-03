@@ -2,6 +2,7 @@ import json
 import traceback
 
 from django.db import transaction
+from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -166,7 +167,7 @@ class ProvinciaViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class LocalidadViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Localidad.objects.all()
+    queryset = Localidad.objects.select_related('pci_codi')
     serializer_class = LocalidadSerializer
     lookup_field_name = 'loc_codi'
     search_fields = ['loc_nomb', 'pci_codi__pci_nomb']
@@ -182,10 +183,10 @@ class CondicionIvaViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class LegajoPersonalViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = LegajoPersonal.objects.all()
+    queryset = LegajoPersonal.objects.select_related('loc_codi')
     serializer_class = LegajoPersonalSerializer
     lookup_field_name = 'per_codi'
-    search_fields = ['per_nomb', 'Per_CUIL', 'per_Ndoc']
+    search_fields = ['per_nomb', 'Per_CUIL', 'per_Ndoc', 'loc_codi__loc_nomb']
     ordering = ['per_nomb']
 
 
@@ -206,11 +207,14 @@ class ComodinClienteViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class ClientesViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Clientes.objects.all()
+    queryset = Clientes.objects.select_related(
+        'cli_ccom', 'can_codi', 'zon_codi', 'grc_codi', 'loc_codi', 'civ_codi', 'per_codi',
+    )
     serializer_class = ClientesSerializer
     lookup_field_name = 'cli_codi'
     search_fields = ['cli_nomb', 'cli_cuit', 'cli_ndoc']
     ordering = ['cli_nomb']
+    
 
 
 #----------------------------------------------------------------ARTICULOS↓------------------------------------------------------------
@@ -224,7 +228,7 @@ class RubroViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class SubRubroViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = SubRubro.objects.all()
+    queryset = SubRubro.objects.select_related('rub_codi')
     serializer_class = SubRubroSerializer
     lookup_field_name = 'sru_codi'
     search_fields = ['sru_nomb', 'rub_codi__rub_nomb']
@@ -248,7 +252,7 @@ class MarcaViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class ProveedorViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Proveedor.objects.all()
+    queryset = Proveedor.objects.select_related('loc_codi', 'civ_codi')
     serializer_class = ProveedorSerializer
     lookup_field_name = 'pro_codi'
     search_fields = ['Pro_nomb', 'pro_Cuit']
@@ -264,7 +268,9 @@ class ComodinArticuloViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class ArticulosViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Articulos.objects.all()
+    queryset = Articulos.objects.select_related(
+        'art_ccom', 'pro_codi', 'sru_codi', 'mar_codi', 'smar_codi',
+    )
     serializer_class = ArticulosSerializer
     lookup_field_name = 'art_codi'
     search_fields = ['art_nomb']
@@ -292,25 +298,36 @@ class ComodinVentaViewSet(BulkCreateMixin, BaseViewSet):
 
 
 class VentasViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Ventas.objects.all()
+    queryset = Ventas.objects.select_related('cli_codi', 'suc_codi', 'vta_ccom').prefetch_related(
+        Prefetch('detalles', queryset=DetalleVenta.objects.select_related('art_codi'))
+    )
     serializer_class = VentasSerializer
     lookup_field_name = 'vta_codi'
     search_fields = ['cli_codi__cli_nomb']
     ordering = ['-vta_fech', '-vta_codi']
+    filterset_fields = {
+        'vta_fech': ['exact', 'gte', 'lte'],
+        'cli_codi': ['exact'],
+        'suc_codi': ['exact'],
+    }
 
 
 class DetalleVentaViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = DetalleVenta.objects.all()
+    queryset = DetalleVenta.objects.select_related('art_codi', 'vta_codi')
     serializer_class = DetalleVentaSerializer
     lookup_field_name = 'dvt_codi'
     search_fields = ['art_codi__art_nomb', 'vta_codi__cli_codi__cli_nomb']
     ordering = ['vta_codi']
+    filterset_fields = {
+        'vta_codi': ['exact', 'in'],
+        'vta_codi__vta_fech': ['exact', 'gte', 'lte'],
+    }
 
 
 #--------------------------------------------------------COBRANZAS↓---------------------------------------------------------------------
 
 class CobranzasViewSet(BulkCreateMixin, BaseViewSet):
-    queryset = Cobranzas.objects.all()
+    queryset = Cobranzas.objects.select_related('cli_codi', 'suc_codi')
     serializer_class = CobranzasSerializer
     lookup_field_name = 'cob_codi'
     search_fields = ['cli_codi__cli_nomb']
