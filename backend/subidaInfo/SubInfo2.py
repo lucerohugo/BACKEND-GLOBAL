@@ -10,7 +10,8 @@ from decimal import Decimal
 # CONFIG
 # ============================================================
 
-BASE_URL = "http://localhost:8000/api"
+# BASE_URL = "http://localhost:8000/api"
+BASE_URL = "https://dashboard.ferreteradebandi.online/api/"
 
 URL = f"{BASE_URL}/importar_datos/"
 
