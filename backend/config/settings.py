@@ -62,9 +62,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    o.strip()
-    for o in os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
-    if o.strip()
+    "https://app.brixsoft.com",
 ]
 
 REST_FRAMEWORK = {
