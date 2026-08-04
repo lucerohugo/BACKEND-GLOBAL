@@ -9,4 +9,5 @@ venv/
 supabase/
 
 /node_modules
-/subidaInfo
+
+todo.tmp
