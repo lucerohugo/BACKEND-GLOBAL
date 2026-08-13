@@ -5,7 +5,7 @@ import requests
 import csv
 from datetime import datetime
 from decimal import Decimal
-# usar esta version
+# no usar este, usar SubInfo2.py
 
 # ============================================================
 # CONFIG

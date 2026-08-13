@@ -267,7 +267,7 @@ class DetalleVenta(models.Model):
     dvt_iexe = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe exento", null=True)
     dvt_iint = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Impuesto interno unitario", null=True)
     dvt_caPi = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Cantidad de piezas en pesables", null=True)
-    dvt_cant = models.IntegerField(blank=True, null=True, help_text="detalle cantidad")
+    dvt_cant = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Cantidad", null=True)
 
 
     class Meta:

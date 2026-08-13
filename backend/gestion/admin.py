@@ -203,17 +203,21 @@ class VentasAdmin(admin.ModelAdmin):
         'vta_codi', 'vta_fech', 'vta_cvta', 'cli_codi', 'suc_codi',
         'gen_codi', 'vta_igra', 'vta_iiva',
     ]
-    list_filter = ['vta_fech', 'suc_codi', 'vta_cvta', 'gen_codi']
+    list_filter = ['vta_fech', 'suc_codi', 'vta_cvta', 'gen_codi', 'detalles__art_codi__sru_codi']
     search_fields = ['=vta_codi', 'cli_codi__cli_nomb']
     ordering = ['-vta_fech', '-vta_codi']
 
 
 @admin.register(DetalleVenta)
 class DetalleVentaAdmin(admin.ModelAdmin):
-    list_display = ['dvt_codi', 'vta_codi', 'art_codi', 'dvt_cant', 'dvt_iuni', 'dvt_itot']
-    list_filter = ['art_codi']
+    list_display = ['dvt_codi', 'vta_codi', 'vta_fech_display', 'art_codi', 'dvt_cant', 'dvt_iuni', 'dvt_itot']
+    list_filter = ['art_codi', 'vta_codi__vta_fech']
     search_fields = ['art_codi__art_nomb', 'vta_codi__cli_codi__cli_nomb']
     ordering = ['vta_codi']
+
+    @admin.display(description='Vta fech', ordering='vta_codi__vta_fech')
+    def vta_fech_display(self, obj):
+        return obj.vta_codi.vta_fech
 
 
 #--------------------------------------------------------COBRANZAS↓-------------------------------------------------------------------------

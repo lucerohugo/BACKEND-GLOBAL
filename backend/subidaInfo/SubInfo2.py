@@ -10,8 +10,8 @@ from decimal import Decimal
 # CONFIG
 # ============================================================
 
-# BASE_URL = "http://localhost:8000/api"
-BASE_URL = "https://dashboard.ferreteradebandi.online/api/"
+BASE_URL = "http://127.0.0.1:8000/api"
+# BASE_URL = "https://dashboard.ferreteradebandi.online/api/"
 
 URL = f"{BASE_URL}/importar_datos/"
 
@@ -488,7 +488,7 @@ def leer_detalle_venta(row):
         "dvt_iexe": campo(row, 14, Decimal),
         "dvt_iint": campo(row, 15, Decimal),
         "dvt_caPi": campo(row, 16, Decimal),
-        "dvt_cant": campo(row, 17, int),
+        "dvt_cant": campo(row, 17, Decimal),
     }
 
 
