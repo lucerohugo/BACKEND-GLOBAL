@@ -10,6 +10,26 @@ from .models import (
 )
 
 
+class SafeSearchAdmin(admin.ModelAdmin):
+    """ModelAdmin cuyo search_fields mezcla texto con algun campo
+    FK '__exact' (codigo). Si el termino buscado no es numerico, ese
+    campo explota al intentar castearlo a numero, asi que en ese caso
+    se reintenta la busqueda sin los campos '__exact'."""
+
+    def get_search_results(self, request, queryset, search_term):
+        try:
+            return super().get_search_results(request, queryset, search_term)
+        except ValueError:
+            original_search_fields = self.search_fields
+            self.search_fields = [
+                f for f in original_search_fields if not f.endswith('__exact')
+            ]
+            try:
+                return super().get_search_results(request, queryset, search_term)
+            finally:
+                self.search_fields = original_search_fields
+
+
 #-----------------------------------------------------------------GENERAL↓------------------------------------------------------------------------------------
 
 @admin.register(General)
@@ -43,7 +63,7 @@ class ProvinciaAdmin(admin.ModelAdmin):
 
 
 @admin.register(Localidad)
-class LocalidadAdmin(admin.ModelAdmin):
+class LocalidadAdmin(SafeSearchAdmin):
     list_display = ['loc_codi', 'loc_nomb', 'loc_cpos', 'pci_codi']
     list_filter = ['pci_codi']
     search_fields = ['loc_codi', 'loc_nomb', 'pci_codi__exact', 'pci_codi__pci_nomb']
@@ -84,7 +104,7 @@ class ComodinClienteAdmin(admin.ModelAdmin):
 
 
 @admin.register(Clientes)
-class ClientesAdmin(admin.ModelAdmin):
+class ClientesAdmin(SafeSearchAdmin):
     list_display = [
         'cli_codi', 'cli_nomb', 'cli_cuit', 'loc_codi', 'can_codi',
         'zon_codi', 'grc_codi', 'civ_codi', 'per_codi', 'cli_alta_display', 'cli_baja',
@@ -159,7 +179,7 @@ class ComodinArticuloAdmin(admin.ModelAdmin):
 
 
 @admin.register(Articulos)
-class ArticulosAdmin(admin.ModelAdmin):
+class ArticulosAdmin(SafeSearchAdmin):
     list_display = [
         'art_codi', 'art_nomb', 'art_ucos', 'art_prec', 'art_pfin',
         'art_tiva', 'art_habi', 'art_pesa',
@@ -197,7 +217,7 @@ class DetalleVentaInline(admin.TabularInline):
 
 
 @admin.register(Ventas)
-class VentasAdmin(admin.ModelAdmin):
+class VentasAdmin(SafeSearchAdmin):
     inlines = [DetalleVentaInline]
     list_display = [
         'vta_codi', 'vta_fech', 'vta_cvta', 'cli_codi', 'suc_codi',
@@ -209,7 +229,7 @@ class VentasAdmin(admin.ModelAdmin):
 
 
 @admin.register(DetalleVenta)
-class DetalleVentaAdmin(admin.ModelAdmin):
+class DetalleVentaAdmin(SafeSearchAdmin):
     list_display = ['dvt_codi', 'vta_codi', 'vta_fech_display', 'art_codi', 'dvt_cant', 'dvt_iuni', 'dvt_itot']
     list_filter = ['art_codi', 'vta_codi__vta_fech']
     search_fields = ['dvt_codi', 'art_codi__exact', 'art_codi__art_nomb', 'vta_codi__exact', 'vta_codi__cli_codi__cli_nomb']
@@ -223,7 +243,7 @@ class DetalleVentaAdmin(admin.ModelAdmin):
 #--------------------------------------------------------COBRANZAS↓-------------------------------------------------------------------------
 
 @admin.register(Cobranzas)
-class CobranzasAdmin(admin.ModelAdmin):
+class CobranzasAdmin(SafeSearchAdmin):
     list_display = ['cob_codi', 'cob_fech', 'cli_codi', 'suc_codi', 'cob_itot']
     list_filter = ['suc_codi', 'cob_fech']
     search_fields = ['cob_codi', 'cli_codi__exact', 'cli_codi__cli_nomb']
