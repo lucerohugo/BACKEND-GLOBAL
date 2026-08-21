@@ -201,7 +201,7 @@ class VentasSerializer(serializers.ModelSerializer):
         model = Ventas
         fields = [
             'vta_codi', 'vta_fech', 'vta_cvta', 'vta_itoR', 'vta_igra',
-            'vta_iexe', 'vta_iiva', 'vta_iiin', 'vta_ibts',
+            'vta_iexe', 'vta_iiva', 'vta_iiin', 'vta_ibts', 'vta_canc',
             'cli_codi', 'suc_codi', 'vta_ccom', 'gen_codi',
             'cli_nomb', 'suc_nomb', 'vta_ncom',
             'detalles',

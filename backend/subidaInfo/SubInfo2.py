@@ -469,6 +469,7 @@ def leer_venta(row):
         "vta_iiva": campo(row, 12, Decimal),
         "vta_iiin": campo(row, 13, Decimal),
         "vta_ibts": campo(row, 14, Decimal),
+        # "vta_canc": campo(row, 15, int), #por ahora comentado cantidad comprobante, agregado 21/8/26
     }
 
 

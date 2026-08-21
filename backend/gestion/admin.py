@@ -221,7 +221,7 @@ class VentasAdmin(SafeSearchAdmin):
     inlines = [DetalleVentaInline]
     list_display = [
         'vta_codi', 'vta_fech', 'vta_cvta', 'cli_codi', 'suc_codi',
-        'gen_codi', 'vta_igra', 'vta_iiva','vta_itoR',
+        'gen_codi', 'vta_igra', 'vta_iiva','vta_itoR', 'vta_canc',
     ]
     list_filter = ['vta_fech', 'suc_codi', 'vta_cvta', 'gen_codi', 'detalles__art_codi__sru_codi']
     search_fields = ['vta_codi', 'cli_codi__cli_nomb', 'vta_ccom__exact', 'detalles__dvt_codi']

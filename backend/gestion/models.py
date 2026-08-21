@@ -226,6 +226,7 @@ class Ventas(models.Model):
     vta_iiva = models.DecimalField(max_digits=30, decimal_places=2, help_text="IVA del artículo (%)", null=True)
     vta_iiin = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Importe de impuesto interno", null=True)
     vta_ibts = models.DecimalField(max_digits=30, decimal_places=2,  help_text="Total ingreso brutos", null=True)
+    vta_canc = models.IntegerField(help_text="Cantidad de comprobantes", null=True, blank=True) 
     #relaciones
     cli_codi = models.ForeignKey(Clientes,on_delete=models.PROTECT, related_name="ventas")
     suc_codi = models.ForeignKey(Sucursal, on_delete=models.PROTECT, related_name="ventas")
