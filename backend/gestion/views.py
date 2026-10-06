@@ -1,7 +1,8 @@
 import json
 import traceback
 
-from django.db import transaction
+from django.conf import settings
+from django.db import connection, transaction
 from django.db.models import Prefetch
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,6 +12,8 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+
+from .auth import clave_valida
 
 from .models import (
     General,
@@ -31,6 +34,16 @@ from .serializers import (
     ComodinVentaSerializer, VentasSerializer, DetalleVentaSerializer,
     CobranzasSerializer,
 )
+
+
+def health(request):
+    """Público, sin datos: para Uptime Kuma y el chequeo de Docker."""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('SELECT 1')
+    except Exception:
+        return JsonResponse({'ok': False}, status=503)
+    return JsonResponse({'ok': True})
 
 
 @api_view(['GET'])
@@ -375,6 +388,13 @@ def importar_datos(request):
 
     if request.method == 'OPTIONS':
         return JsonResponse({'status': 'ok'})
+
+    if not (settings.API_PUBLICA or clave_valida(request)
+            or (request.user.is_authenticated and request.user.is_staff)):
+        return JsonResponse(
+            {'success': False, 'detail': 'Falta la clave de API (Authorization: Bearer <clave>).'},
+            status=401,
+        )
 
     try:
         data = json.loads(request.body)

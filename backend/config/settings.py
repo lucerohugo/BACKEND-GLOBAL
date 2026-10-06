@@ -18,7 +18,18 @@ from dotenv import load_dotenv
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / '.env')
+# ENV_FILE permite que varias instalaciones (clientes) compartan el mismo código
+# y cada una cargue su propio .env. Si no se define, se usa backend/.env
+load_dotenv(os.environ.get('ENV_FILE', BASE_DIR / '.env'))
+
+
+def env_list(name, default=''):
+    return [v.strip() for v in os.environ.get(name, default).split(',') if v.strip()]
+
+
+# Carpeta con los datos propios de cada instalación (base SQLite, archivos subidos, backups).
+# En local queda en backend/ como siempre; en producción cada cliente tiene la suya.
+DATA_DIR = Path(os.environ.get('DATA_DIR', BASE_DIR))
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -30,9 +41,17 @@ SECRET_KEY = os.environ.get(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = [
-    h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',') if h.strip()
-]
+ALLOWED_HOSTS = env_list('ALLOWED_HOSTS', 'localhost,127.0.0.1')
+
+# Necesario para entrar al admin cuando se accede por dominio con HTTPS
+# Ej: CSRF_TRUSTED_ORIGINS=https://api.cliente.com.ar
+CSRF_TRUSTED_ORIGINS = env_list('CSRF_TRUSTED_ORIGINS')
+
+# Solo activar cuando hay un proxy (Traefik/Nginx) delante que termina el HTTPS
+if os.environ.get('BEHIND_HTTPS_PROXY', 'False') == 'True':
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 
 # Application definition
@@ -52,6 +71,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,18 +80,30 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-#descomentar en produccion
-# CORS_ALLOWED_ORIGINS = [
-#     "https://app.brixsoft.com",
-# ]
+# CORS_ALLOWED_ORIGINS=https://app.brixsoft.com,https://otro.com
+# Si no se define, se permite cualquier origen (comportamiento de desarrollo)
+CORS_ALLOWED_ORIGINS = env_list('CORS_ALLOWED_ORIGINS')
+CORS_ALLOW_ALL_ORIGINS = not CORS_ALLOWED_ORIGINS
 
-#local hay que comentar 
-CORS_ALLOW_ALL_ORIGINS = True
 
+# Clave para el dashboard y la sincronización: header "Authorization: Bearer <clave>"
+API_SYNC_KEY = os.environ.get('API_SYNC_KEY', '')
+
+# Solo para una transición: API_PUBLICA=True deja la API abierta como antes
+API_PUBLICA = os.environ.get('API_PUBLICA', 'False') == 'True'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 1000,
+    # Acceso con la clave de API, o logueado en /admin/ para navegar la API desde el navegador
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'gestion.auth.ApiKeyAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny' if API_PUBLICA
+        else 'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 
 ROOT_URLCONF = 'config.urls'
@@ -101,7 +133,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATA_DIR / 'db.sqlite3',
+        # Espera hasta 20s si la base está bloqueada por otra escritura
+        'OPTIONS': {'timeout': 20},
     }
 }
 
@@ -141,6 +175,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Archivos subidos (ej: logo en General)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = DATA_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

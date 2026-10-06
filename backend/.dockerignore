@@ -1,0 +1,13 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.tmp
+.env
+db.sqlite3
+media/
+backups/
+staticfiles/
+subidaInfo/
+Dockerfile
+.dockerignore
