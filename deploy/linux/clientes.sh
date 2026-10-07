@@ -8,13 +8,23 @@
 #     docker-compose.yml  -> generado automáticamente
 #     data/               -> db.sqlite3, media/, backups/   (lo único a respaldar)
 #
-#  Uso:  sudo ./clientes.sh <comando> [opciones]      (./clientes.sh ayuda)
+#  Uso:  ./clientes.sh <comando> [opciones]      (./clientes.sh ayuda)
 # =============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# La carpeta de clientes se guarda en $CONFIG para que funcione igual con sudo, sin sudo o desde cron.
+# Prioridad: variable CLIENTES_DIR > archivo de configuración > /opt/clientes-backend
+CONFIG="/etc/backend-global.conf"
+if [ -z "${CLIENTES_DIR:-}" ] && [ -f "$CONFIG" ]; then
+    # shellcheck disable=SC1090
+    . "$CONFIG"
+fi
 CLIENTES_DIR="${CLIENTES_DIR:-/opt/clientes-backend}"
+if [ ! -f "$CONFIG" ] && [ "$(id -u)" = "0" ]; then
+    echo "CLIENTES_DIR=$CLIENTES_DIR" > "$CONFIG"
+fi
 IMAGEN="${IMAGEN:-backend-global:latest}"
 PUERTO_INICIAL="${PUERTO_INICIAL:-8001}"
 RED_TRAEFIK="traefik"
@@ -31,12 +41,14 @@ leer_env() { # leer_env <archivo> <VARIABLE>
 }
 
 requiere_docker() {
-    command -v docker >/dev/null || error "Docker no está instalado. Ejecutá: sudo $0 instalar"
-    docker info >/dev/null 2>&1 || error "No se puede usar Docker. Ejecutá el script con sudo."
+    command -v docker >/dev/null || error "Docker no está instalado. Ejecutá: $0 instalar"
+    docker info >/dev/null 2>&1 || error "No se puede usar Docker. Ejecutá el script como root (o con sudo)."
 }
 
 requiere_cliente() {
     [ -n "${1:-}" ] || error "Falta el nombre del cliente"
+    # Mismo formato que en 'crear': evita rutas como '..' (importante para 'borrar')
+    [[ "$1" =~ ^[a-z0-9][a-z0-9-]{1,40}$ ]] || error "Nombre de cliente inválido: $1"
     [ -f "$CLIENTES_DIR/$1/.env" ] || error "No existe el cliente '$1' en $CLIENTES_DIR"
 }
 
@@ -69,9 +81,10 @@ esperar_respuesta() { # esperar_respuesta <puerto>
 # -----------------------------------------------------------------------------
 generar_compose() { # generar_compose <nombre>
     local nombre="$1" dir="$CLIENTES_DIR/$1"
-    local puerto dominio
+    local puerto dominio proxy
     puerto="$(leer_env "$dir/.env" PUERTO)"
     dominio="$(leer_env "$dir/.env" DOMINIO)"
+    proxy="$(leer_env "$dir/.env" PROXY)"
 
     {
         echo "# Generado por clientes.sh - no editar a mano (usar el .env)"
@@ -93,8 +106,12 @@ generar_compose() { # generar_compose <nombre>
             # Modo puerto: accesible en http://IP:PUERTO
             echo "    ports:"
             echo "      - \"$puerto:8000\""
+        elif [ "$proxy" = "nginx" ]; then
+            # Modo dominio con el nginx del VPS: el puerto queda solo local
+            echo "    ports:"
+            echo "      - \"127.0.0.1:$puerto:8000\""
         else
-            # Modo dominio: Traefik enruta por nombre; el puerto queda solo local
+            # Modo dominio con Traefik: enruta por nombre; el puerto queda solo local
             echo "    ports:"
             echo "      - \"127.0.0.1:$puerto:8000\""
             echo "    labels:"
@@ -115,7 +132,7 @@ generar_compose() { # generar_compose <nombre>
 # -----------------------------------------------------------------------------
 cmd_instalar() {
     if ! command -v docker >/dev/null; then
-        [ "$(id -u)" = "0" ] || error "Para instalar Docker ejecutá con sudo"
+        [ "$(id -u)" = "0" ] || error "Para instalar Docker ejecutá como root (o con sudo)"
         info "Instalando Docker (script oficial get.docker.com)..."
         curl -fsSL https://get.docker.com | sh
         systemctl enable --now docker
@@ -129,7 +146,7 @@ cmd_instalar() {
 
     cmd_construir
     echo
-    verde "Listo. Creá el primer cliente con:  sudo $0 crear <nombre>"
+    verde "Listo. Creá el primer cliente con:  $0 crear <nombre>"
 }
 
 cmd_construir() {
@@ -167,29 +184,27 @@ cmd_crear() {
         error "El puerto $puerto ya está en uso"
     fi
 
-    if [ -n "$dominio" ] && ! docker network inspect "$RED_TRAEFIK" >/dev/null 2>&1; then
-        error "Para usar --dominio primero instalá Traefik:  sudo $0 traefik <email>"
+    if [ -n "$dominio" ]; then
+        validar_dominio "$dominio" ""
+        [ -n "$(detectar_proxy)" ] || error_sin_proxy
     fi
 
     mkdir -p "$dir/data"
     verde "Carpeta creada: $dir"
 
-    local hosts="*" csrf="" proxy="False"
-    if [ -n "$dominio" ]; then
-        hosts="$dominio"; csrf="https://$dominio"; proxy="True"
-    fi
     local admin_pass; admin_pass="$(aleatorio 16)"
 
     cat > "$dir/.env" <<EOF
 # Cliente: $nombre  (creado $(date '+%Y-%m-%d %H:%M'))
 PUERTO=$puerto
-DOMINIO=$dominio
+DOMINIO=
+PROXY=
 
 SECRET_KEY=$(aleatorio 60)
 DEBUG=False
-ALLOWED_HOSTS=$hosts
-CSRF_TRUSTED_ORIGINS=$csrf
-BEHIND_HTTPS_PROXY=$proxy
+ALLOWED_HOSTS=*
+CSRF_TRUSTED_ORIGINS=
+BEHIND_HTTPS_PROXY=False
 CORS_ALLOWED_ORIGINS=$cors
 API_SYNC_KEY=$(aleatorio 40)
 
@@ -215,7 +230,12 @@ EOF
     if esperar_respuesta "$puerto"; then
         verde "Backend respondiendo"
     else
-        aviso "No respondió todavía. Revisá:  sudo $0 logs $nombre"
+        aviso "No respondió todavía. Revisá:  $0 logs $nombre"
+    fi
+
+    if [ -n "$dominio" ]; then
+        cmd_dominio "$nombre" "$dominio" || true
+        dominio="$(leer_env "$dir/.env" DOMINIO)"
     fi
 
     echo
@@ -233,7 +253,10 @@ EOF
     echo " Contenedor:  backend-$nombre"
     echo " Datos:       $dir/data"
     echo "======================================================"
-    [ -z "$dominio" ] && aviso "Si usás firewall, abrí el puerto $puerto (ej: sudo ufw allow $puerto/tcp)"
+    if [ -z "$dominio" ]; then
+        aviso "Para entrar desde afuera abrí el puerto $puerto en el firewall del proveedor,"
+        aviso "o asignale un dominio:  $0 dominio $nombre $nombre.tudominio.com"
+    fi
     return 0
 }
 
@@ -285,37 +308,154 @@ escribir_env() { # escribir_env <archivo> <VARIABLE> <valor>
     fi
 }
 
+detectar_proxy() { # nginx | traefik | (vacío)
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx traefik; then
+        echo traefik
+    elif command -v nginx >/dev/null && systemctl is-active --quiet nginx; then
+        echo nginx
+    fi
+    return 0
+}
+
+error_sin_proxy() {
+    error "Este VPS no tiene nginx ni Traefik para los dominios. Instalá nginx:  apt install -y nginx   (o: $0 traefik <email>)"
+}
+
+validar_dominio() { # validar_dominio <dominio> <cliente-actual>
+    [[ "$1" =~ ^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$ ]] \
+        || error "Dominio inválido: $1 (ej: la-republica.brixsoft.com)"
+    local env
+    for env in "$CLIENTES_DIR"/*/.env; do
+        [ -f "$env" ] || continue
+        [ "$(basename "$(dirname "$env")")" = "$2" ] && continue
+        if grep -qFx "DOMINIO=$1" "$env"; then
+            error "El dominio $1 ya está asignado a $(basename "$(dirname "$env")")"
+        fi
+    done
+    return 0
+}
+
+nginx_conf() { # ruta del archivo de nginx del cliente
+    if [ -d /etc/nginx/sites-available ]; then
+        echo "/etc/nginx/sites-available/backend-$1.conf"
+    else
+        echo "/etc/nginx/conf.d/backend-$1.conf"
+    fi
+}
+
+quitar_nginx() { # quitar_nginx <nombre>
+    rm -f "$(nginx_conf "$1")" "/etc/nginx/sites-enabled/backend-$1.conf"
+    if nginx -t >/dev/null 2>&1; then systemctl reload nginx; fi
+    return 0
+}
+
+configurar_nginx() { # configurar_nginx <nombre> <dominio> <puerto>  -> 0 si quedó con HTTPS
+    local nombre="$1" dominio="$2" puerto="$3" conf
+    conf="$(nginx_conf "$nombre")"
+    cat > "$conf" <<EOF
+# Generado por clientes.sh para el cliente $nombre - no editar a mano
+server {
+    listen 80;
+    listen [::]:80;
+    server_name $dominio;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://127.0.0.1:$puerto;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 300;
+    }
+}
+EOF
+    if [ -d /etc/nginx/sites-enabled ]; then
+        ln -sf "$conf" "/etc/nginx/sites-enabled/backend-$nombre.conf"
+    fi
+    if ! nginx -t >/dev/null 2>&1; then
+        quitar_nginx "$nombre"
+        error "nginx rechazó la configuración (revisá con: nginx -t). No se cambió nada en nginx."
+    fi
+    systemctl reload nginx
+    verde "nginx configurado: $dominio → puerto local $puerto"
+
+    # El certificado solo se puede sacar si el DNS ya apunta a este VPS
+    local ip_dns
+    ip_dns="$(getent ahostsv4 "$dominio" 2>/dev/null | awk 'NR==1{print $1}')"
+    if [ -z "$ip_dns" ]; then
+        aviso "El dominio $dominio todavía no existe en el DNS."
+        aviso "Creá un registro A: $dominio → $(ip_local) y después repetí:  $0 dominio $nombre $dominio"
+        return 1
+    fi
+    if ! hostname -I | tr ' ' '\n' | grep -qx "$ip_dns"; then
+        aviso "El DNS de $dominio apunta a $ip_dns y este VPS es $(ip_local). Se intenta igual..."
+    fi
+
+    if ! command -v certbot >/dev/null; then
+        info "Instalando certbot..."
+        apt-get install -y certbot python3-certbot-nginx >/dev/null
+    fi
+    local email_args=(--register-unsafely-without-email)
+    if [ -n "${CERTBOT_EMAIL:-}" ]; then email_args=(-m "$CERTBOT_EMAIL"); fi
+    info "Pidiendo certificado HTTPS (Let's Encrypt)..."
+    if certbot --nginx -d "$dominio" --non-interactive --agree-tos --redirect \
+            --keep-until-expiring "${email_args[@]}"; then
+        verde "HTTPS activo"
+        return 0
+    fi
+    aviso "No se pudo sacar el certificado. Revisá el DNS y repetí:  $0 dominio $nombre $dominio"
+    return 1
+}
+
 cmd_dominio() {
     local nombre="${1:-}" dominio="${2:-}"
     requiere_cliente "$nombre"; requiere_docker
-    [ -n "$dominio" ] || error "Uso: $0 dominio <nombre> <api.cliente.com>   (o --quitar)"
+    [ -n "$dominio" ] || error "Uso: $0 dominio <nombre> <nombre.brixsoft.com>   (o --quitar)"
     local env="$CLIENTES_DIR/$nombre/.env"
+    local dominio_viejo proxy_viejo puerto
+    dominio_viejo="$(leer_env "$env" DOMINIO)"
+    proxy_viejo="$(leer_env "$env" PROXY)"
+    puerto="$(leer_env "$env" PUERTO)"
 
     if [ "$dominio" = "--quitar" ]; then
+        if [ "$proxy_viejo" = "nginx" ]; then quitar_nginx "$nombre"; fi
         escribir_env "$env" DOMINIO ""
+        escribir_env "$env" PROXY ""
         escribir_env "$env" ALLOWED_HOSTS "*"
         escribir_env "$env" CSRF_TRUSTED_ORIGINS ""
         escribir_env "$env" BEHIND_HTTPS_PROXY False
         cmd_reiniciar "$nombre"
-        verde "Dominio quitado. URL: http://$(ip_local):$(leer_env "$env" PUERTO)/api/"
+        verde "Dominio quitado. URL: http://$(ip_local):$puerto/api/"
         return 0
     fi
 
-    [[ "$dominio" =~ ^[a-z0-9.-]+\.[a-z]{2,}$ ]] || error "Dominio inválido: $dominio"
-    docker network inspect "$RED_TRAEFIK" >/dev/null 2>&1 \
-        || error "Primero instalá Traefik:  sudo $0 traefik <email>"
-    if grep -qsE "^DOMINIO=$dominio$" "$CLIENTES_DIR"/*/.env; then
-        error "El dominio $dominio ya está asignado a otro cliente"
+    validar_dominio "$dominio" "$nombre"
+    local proxy; proxy="$(detectar_proxy)"
+    [ -n "$proxy" ] || error_sin_proxy
+
+    if [ "$proxy_viejo" = "nginx" ] && [ "$dominio_viejo" != "$dominio" ]; then
+        quitar_nginx "$nombre"
     fi
 
     escribir_env "$env" DOMINIO "$dominio"
-    escribir_env "$env" ALLOWED_HOSTS "$dominio"
+    escribir_env "$env" PROXY "$proxy"
+    # 127.0.0.1/localhost: para el chequeo de salud interno (el puerto deja de ser público)
+    escribir_env "$env" ALLOWED_HOSTS "$dominio,127.0.0.1,localhost"
     escribir_env "$env" CSRF_TRUSTED_ORIGINS "https://$dominio"
     escribir_env "$env" BEHIND_HTTPS_PROXY True
     cmd_reiniciar "$nombre"
-    verde "Dominio asignado. URL: https://$dominio/api/"
-    aviso "El DNS (registro A de $dominio) tiene que apuntar a la IP de este VPS."
-    aviso "El certificado HTTPS tarda ~1 minuto la primera vez. Desde ahora el puerto queda solo interno."
+
+    if [ "$proxy" = "nginx" ]; then
+        configurar_nginx "$nombre" "$dominio" "$puerto" || return 1
+        verde "Listo: https://$dominio/api/"
+    else
+        verde "Dominio asignado (Traefik). URL: https://$dominio/api/"
+        aviso "El DNS (registro A de $dominio) tiene que apuntar a la IP de este VPS."
+    fi
+    aviso "El puerto $puerto quedó cerrado hacia afuera: se entra solo por el dominio."
+    return 0
 }
 
 cmd_clave() {
@@ -352,9 +492,48 @@ cmd_eliminar() {
     read -r -p "Escribí '$nombre' para confirmar (los datos se mueven a _eliminados): " confirma
     [ "$confirma" = "$nombre" ] || error "Cancelado"
     (cd "$CLIENTES_DIR/$nombre" && docker compose down)
+    if [ "$(leer_env "$CLIENTES_DIR/$nombre/.env" PROXY)" = "nginx" ]; then
+        quitar_nginx "$nombre"
+        verde "Configuración de nginx eliminada"
+    fi
     mkdir -p "$CLIENTES_DIR/_eliminados"
     mv "$CLIENTES_DIR/$nombre" "$CLIENTES_DIR/_eliminados/$nombre-$(date +%Y%m%d-%H%M%S)"
     verde "Cliente $nombre detenido. Datos en $CLIENTES_DIR/_eliminados/"
+}
+
+cmd_borrar() {
+    local nombre="${1:-}" confirmar="${2:-}"
+    requiere_cliente "$nombre"; requiere_docker
+    local dir="$CLIENTES_DIR/$nombre"
+    local dominio proxy
+    dominio="$(leer_env "$dir/.env" DOMINIO)"
+    proxy="$(leer_env "$dir/.env" PROXY)"
+
+    if [ "$confirmar" != "--si" ]; then
+        aviso "Se va a BORRAR PARA SIEMPRE '$nombre': base de datos, backups, configuración${dominio:+ y el dominio $dominio}."
+        aviso "No se puede deshacer. (Para una baja con copia de los datos usá: $0 eliminar $nombre)"
+        local confirma
+        read -r -p "Escribí '$nombre' para confirmar: " confirma
+        [ "$confirma" = "$nombre" ] || error "Cancelado, no se borró nada"
+    fi
+
+    if [ -f "$dir/docker-compose.yml" ]; then
+        (cd "$dir" && docker compose down --remove-orphans) || true
+    fi
+    docker rm -f "backend-$nombre" >/dev/null 2>&1 || true
+    verde "Contenedor y red eliminados"
+
+    if [ "$proxy" = "nginx" ]; then
+        quitar_nginx "$nombre"
+        if [ -n "$dominio" ] && command -v certbot >/dev/null; then
+            certbot delete --cert-name "$dominio" --non-interactive >/dev/null 2>&1 || true
+        fi
+        verde "nginx y certificado de $dominio eliminados"
+    fi
+
+    rm -rf "$dir"
+    verde "Datos borrados: $dir"
+    verde "Cliente $nombre borrado por completo (la imagen compartida por todos los clientes no se toca)"
 }
 
 cmd_traefik() {
@@ -400,12 +579,12 @@ EOF
 
 cmd_ayuda() {
     cat <<EOF
-Uso: sudo $0 <comando>
+Uso: $0 <comando>   (como root)
 
   instalar                         Instala Docker (si falta) y construye la imagen
   crear <nombre> [opciones]        Crea y levanta un cliente nuevo
         --puerto N                 Puerto fijo (por defecto: el siguiente libre desde $PUERTO_INICIAL)
-        --dominio api.cliente.com  Publicar por dominio con HTTPS (requiere 'traefik')
+        --dominio x.brixsoft.com   Publicar por dominio con HTTPS (usa el nginx o Traefik del VPS)
         --base archivo.sqlite3     Arrancar con una base existente
         --cors https://front.com   Origen permitido del frontend
   listar                           Clientes, puertos y estado
@@ -415,8 +594,9 @@ Uso: sudo $0 <comando>
   clave <nombre> [usuario]         Cambiar contraseña del admin (o de otro usuario)
   logs <nombre>                    Ver logs en vivo
   backup [nombre]                  Backup de la base (todos si no se indica)
-  eliminar <nombre>                Detiene el cliente y archiva sus datos
-  traefik <email>                  Instala el proxy para usar dominios + HTTPS
+  eliminar <nombre>                Baja: detiene el cliente y archiva sus datos en _eliminados
+  borrar <nombre> [--si]           Borra TODO para siempre (pruebas/errores). --si: sin confirmar
+  traefik <email>                  Instala Traefik (solo en un VPS SIN nginx)
 
 Carpeta de clientes: $CLIENTES_DIR   (cambiar con CLIENTES_DIR=/otra/ruta)
 EOF
@@ -435,6 +615,7 @@ case "$comando" in
     logs)       cmd_logs "$@" ;;
     backup)     cmd_backup "$@" ;;
     eliminar)   cmd_eliminar "$@" ;;
+    borrar)     cmd_borrar "$@" ;;
     traefik)    cmd_traefik "$@" ;;
     *)          cmd_ayuda ;;
 esac

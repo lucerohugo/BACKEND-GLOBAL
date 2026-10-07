@@ -19,7 +19,8 @@ param(
     [Parameter(Position = 1)][string]$Nombre,
     [int]$Puerto,
     [string]$Base,
-    [string]$Cors
+    [string]$Cors,
+    [switch]$Si
 )
 
 $ErrorActionPreference = 'Stop'
@@ -50,6 +51,8 @@ function Requiere-Instalado {
 
 function Requiere-Cliente($n) {
     if (-not $n) { Falla 'Falta el nombre del cliente' }
+    # Mismo formato que en 'crear': evita rutas como '..' (importante para 'borrar')
+    if ($n -cnotmatch '^[a-z0-9][a-z0-9-]{1,40}$') { Falla "Nombre de cliente invalido: $n" }
     if (-not (Test-Path (Join-Path $ClientesDir "$n\.env"))) { Falla "No existe el cliente '$n' en $ClientesDir" }
 }
 
@@ -324,6 +327,22 @@ function Cmd-Eliminar {
     Ok "Cliente $Nombre detenido. Datos en $destino"
 }
 
+function Cmd-Borrar {
+    Requiere-Admin; Requiere-Cliente $Nombre
+    if (-not $Si) {
+        Aviso "Se va a BORRAR PARA SIEMPRE '$Nombre': base de datos, backups y configuracion."
+        Aviso "No se puede deshacer. (Para una baja con copia de los datos usa: eliminar $Nombre)"
+        $conf = Read-Host "Escribi '$Nombre' para confirmar"
+        if ($conf -ne $Nombre) { Falla 'Cancelado, no se borro nada' }
+    }
+    Detener-Cliente $Nombre
+    Unregister-ScheduledTask -TaskName "backend-$Nombre" -Confirm:$false -ErrorAction SilentlyContinue
+    Remove-NetFirewallRule -DisplayName "backend-$Nombre" -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2   # esperar que Windows libere los archivos
+    Remove-Item (Join-Path $ClientesDir $Nombre) -Recurse -Force
+    Ok "Cliente $Nombre borrado por completo"
+}
+
 function Cmd-Ayuda {
     @"
 Uso (PowerShell como Administrador):  .\clientes.ps1 <comando>
@@ -339,7 +358,8 @@ Uso (PowerShell como Administrador):  .\clientes.ps1 <comando>
   clave <nombre>                    Cambiar contrasena del admin
   logs <nombre>                     Ver log en vivo
   backup [nombre]                   Backup de la base (todos si no se indica)
-  eliminar <nombre>                 Detiene el cliente y archiva sus datos
+  eliminar <nombre>                 Baja: detiene el cliente y archiva sus datos en _eliminados
+  borrar <nombre> [-Si]             Borra TODO para siempre (pruebas/errores). -Si: sin confirmar
 
 Carpeta de clientes: $ClientesDir   (cambiar con `$env:CLIENTES_DIR)
 "@
@@ -356,5 +376,6 @@ switch ($Comando) {
     'logs'       { Cmd-Logs }
     'backup'     { Cmd-Backup }
     'eliminar'   { Cmd-Eliminar }
+    'borrar'     { Cmd-Borrar }
     default      { Cmd-Ayuda }
 }
